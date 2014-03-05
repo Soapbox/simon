@@ -1,0 +1,35 @@
+#!/usr/bin/env node
+
+/**
+	 _____                      ______
+	/  ___|                     | ___ \
+	\ `--.   ___    __ _  _ __  | |_/ /  ___  __  __
+	 `--. \ / _ \  / _` || '_ \ | ___ \ / _ \ \ \/ /
+	/\__/ /| (_) || (_| || |_) || |_/ /| (_) | >  <
+	\____/  \___/  \__,_|| .__/ \____/  \___/ /_/\_\
+	 _____  _            | |
+	/  ___|(_)           |_|
+	\ `--.  _  _ __ ___    ___   _ __
+	 `--. \| || '_ ` _ \  / _ \ | '_ \
+	/\__/ /| || | | | | || (_) || | | |
+	\____/ |_||_| |_| |_| \___/ |_| |_|
+
+	Command-line Utility for SoapBox Devs.
+	Make sure you run `npm install` before using
+	See `./simon help` for more info
+
+	© 2014 SoapBox Innovations Inc.
+*/
+
+var cli = require('../index.js');
+
+// Parse command-line args
+cli.program.parse(process.argv);
+
+if (cli.program.args.length === 0) {
+
+	// No args found, run the default grunt task
+	cli.simon.prompt();
+	cli.simon.grunt();
+}
+

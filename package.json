@@ -1,0 +1,30 @@
+{
+  "name": "soapbox-simon",
+  "version": "0.0.0",
+  "description": "The development interface for SoapBox (http://soapboxhq.com/)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nfrasser/simon.git"
+  },
+  "keywords": [
+    "soapbox",
+    "simon"
+  ],
+  "author": "Nick Frasser <nick@soapboxhq.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nfrasser/simon/issues"
+  },
+  "homepage": "https://github.com/nfrasser/simon",
+  "dependencies": {
+    "commander": "^2.1.0",
+    "underscore": "^1.6.0",
+    "bower": "^1.2.8",
+    "grunt-cli": "^0.1.13",
+    "colors": "^0.6.2"
+  }
+}
