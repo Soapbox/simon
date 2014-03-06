@@ -31,6 +31,7 @@ Simon.prototype = {
 	_hasPrompt: false,
 	_showPrompt: null,
 	_rl: null,
+	_regexpSafe: /([.?*+\^$\[\](){}|\-\\])/g,
 
 	/**
 		Constructor
@@ -508,9 +509,7 @@ Simon.prototype = {
 
 	/**
 		Build the front end end begin watching for changes
-		@class		class
-		@extends	extends
-		@namespace	namespace
+		@method @watch
 	*/
 	watch: function () {
 		return this.runTasks([{
@@ -520,6 +519,18 @@ Simon.prototype = {
 			name: 'grunt',
 			args: ['watch']
 		}]);
+	},
+
+	/**
+		Fix permissions on the app/storage folder
+		@method @permissions
+	*/
+	permissions: function () {
+		return this.exec('chmod', [
+			'-R',
+			'+w',
+			'app/storage'
+		]);
 	},
 
 	/**
@@ -557,19 +568,114 @@ Simon.prototype = {
 	},
 
 	/**
-		TODO: Make this environment-agnostic
 		@method add
+		@param	{String} [subdomain]
 		@return {Boolean} result Was the add successful?
 	*/
-	add: function (name) {
+	add: function (subdomain) {
 
 		var locations = this.constructor.LOCATIONS,
-			hosts = fs.readFileSync(locations.hostsFile, {
-			encoding: 'utf8'
-		}) || '';
 
-		var existingMatch = new RegExp(
-			'^127\\.0\\.0\\.1\\s+' + name + '\\.soapboxv4\\.dev$', 'm'
+			// Makes a plain string safe for adding to a built up regexp
+			regexpSafe = this._regexpSafe,
+
+			ip = this.config.ip,
+			domain = this.config.domain,
+			url = (subdomain ? subdomain + '.' : '') + domain,
+
+			hosts = fs.readFileSync(locations.hostsFile, {
+				encoding: 'utf8'
+			}) || '',
+
+			existingMatch;
+
+		// Look for the config URL (with the given subdomain, if any
+		existingMatch = new RegExp(
+			'^[0-9.]+\\s+(' +
+			url.replace(regexpSafe, '\\$1') +
+			')$', 'm'
+		);
+
+		// Just in case
+		this._triggerPrompt();
+
+		try {
+
+			// First check if the slug exists
+			if (hosts.match(existingMatch)) {
+
+				// Already exists, replace it with the new IP address
+				hosts = hosts.replace(existingMatch, ip + '	$1');
+
+			} else {
+
+				// Split up by the newline
+				hosts = hosts.split(eol);
+
+				for (var i = 0; i < hosts.length; i++) {
+					// Find the localhost line
+					if (/^[0-9.]+\s+localhost$/.test(hosts[i])) {
+						break;
+					}
+				}
+
+				if (i < hosts.length) {
+
+					// Found the localhost line, add the new domain right below it
+					hosts.splice(i + 1, 0, ip + '	' + url);
+
+				} else {
+					throw 'Invalid hosts file';
+				}
+
+				hosts = hosts.join(eol);
+
+			}
+
+			fs.writeFileSync(locations.hostsFile, hosts);
+
+		} catch (e) {
+			util.puts(e.toString().red);
+			util.puts(('The site "' + url + '" could not be added.').red);
+			return false;
+
+		}
+
+		util.puts((
+			'Added new site at ' + url.bold
+		).green);
+
+		return true;
+
+	},
+
+	/**
+		@method remove
+		@param	{String} [subdomain]
+		@return {Boolean} result Was the removal successful?
+	*/
+	remove: function (subdomain) {
+
+		var locations = this.constructor.LOCATIONS,
+
+			// Makes a plain string safe for adding to a built up regexp
+			regexpSafe = this._regexpSafe,
+
+			//ip = this.config.ip,
+			domain = this.config.domain,
+			url = (subdomain ? subdomain + '.' : '') + domain,
+
+			hosts = fs.readFileSync(locations.hostsFile, {
+				encoding: 'utf8'
+			}) || '',
+
+			existingMatch;
+
+		existingMatch = new RegExp(
+			eol +
+			'[0-9.]+\\s+' +
+			url.replace(regexpSafe, '\\$1') +
+			eol
 		);
 
 		this._triggerPrompt();
@@ -577,84 +683,25 @@ Simon.prototype = {
 		// First check if the slug exists
 		if (hosts.match(existingMatch)) {
 
-			// Already exists
-			util.puts(('SoapBox "' + name + '" already exists').yellow);
-			return true;
-
-		} else {
-
-			// Split up by the newline
-			hosts = hosts.split(eol);
-
-			for (var i = 0; i < hosts.length; i++) {
-				// Find the localhost
-				if (/^127\.0\.0\.1\s+localhost$/m.test(hosts[i])) {
-					break;
-				}
-			}
-
 			try {
 
-				if (i < hosts.length) {
-
-					// Found the localhost line, add the new SoapBox right below it
-					hosts.splice(i + 1, 0, '127.0.0.1   ' + name + '.soapboxv4.dev');
-
-					fs.writeFileSync(locations.hostsFile, hosts.join(eol));
-
-					util.puts((
-						'Added new SoapBox at ' + (
-							'http://' + name + '.soapboxv4.dev/'
-						).bold
-					).green);
-
-					return true;
-
-				} else {
-					throw 'The hosts file does not contain the line "127.0.0.1  localhost';
-				}
-
-			} catch (e) {
-				util.puts(e.toString().red);
-				util.puts(('The SoapBox "' + name + '" could not be added.').red);
-			}
-		}
-
-		return false;
-
-	},
-
-	/**
-		TODO: Make this environment agnostic
-		@method remove
-		@return {Boolean} result Was the removal successful?
-	*/
-	remove: function (name) {
-
-		var locations = this.constructor.LOCATIONS,
-			hosts = fs.readFileSync(locations.hostsFile, {
-			encoding: 'utf8'
-		}) || '';
-
-		var existingMatch = new RegExp(eol + '[0-9.]+\\s+' + name + '\\.soapboxv4\\.dev' + eol);
-		this._triggerPrompt();
-
-		// First check if the slug exists
-		if (hosts.match(existingMatch)) {
-			try {
+				// Attempt replacing
 				fs.writeFileSync(
 					locations.hostsFile,
-					hosts.replace(existingMatch, '\n')
+					hosts.replace(existingMatch, eol)
 				);
-				util.puts(('The SoapBox "' + name + '" was removed successfully.').green);
+
+				util.puts(('The site "' + url + '" was removed successfully.').green);
 				return true;
+
 			} catch (e) {
+				// An error occured, probably permissions
 				util.puts(e.toString().red);
-				util.puts(('The SoapBox "' + name + '" could not be removed.').red);
+				util.puts(('The site "' + url + '" could not be removed.').red);
 			}
 		} else {
 			// Doesn't exist
-			util.puts(('SoapBox "' + name + '" does not exist').yellow);
+			util.puts(('The site "' + url + '" does not exist').yellow);
 			return true;
 		}
 

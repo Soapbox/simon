@@ -33,9 +33,9 @@ function parseArgs(command) {
 	return args.slice(commandIndex + 1);
 }
 
-function configureSimon(simon, config, program) {
+function configureSimon(simon, config, program, skipSimonJsonCheck) {
 
-	if (!fs.existsSync(configFileName)) {
+	if (!(skipSimonJsonCheck || fs.existsSync(configFileName))) {
 
 		// Make sure simon.json is defined
 		console.error([
@@ -47,7 +47,7 @@ function configureSimon(simon, config, program) {
 		process.exit();
 	}
 
-	config.vagrant = !!program.up;
+	config.vagrant = !program.local;
 	config.hhvm = !!program.super;
 	config.help = program.outputHelp.bind(program);
 	config.banner = fs.readFileSync(path.join(__dirname, 'lib', 'banner.txt'), {
@@ -73,13 +73,14 @@ function configureSimon(simon, config, program) {
 
 program.version(pkg.version)
 	.option('-s, --super', 'Run PHP commands such as PHPUnit and Artisan with HHVM.')
-	.option('-u, --up', 'Run non-Node commands on the Vagrant VM by default');
+	.option('-l, --local', 'Run all commands locally instead of on the Vagrant VM.')
+	.option('--subdomain [slug]', 'Specify a subdomain for the "add" and "remove" commands');
 
 // Run the default task
 program.command('help')
 	.description('Show this help block')
 	.action(function () {
-		//configureSimon(simon, config, program);
+		configureSimon(simon, config, program, true);
 		simon.help();
 	});
 
@@ -153,20 +154,22 @@ program.command('refresh')
 		simon.refresh();
 	});
 
-/*// Add a new SoapBox
-program.command('add <slug>')
-	.description('Adds a new local SoapBox at <slug>.soapboxv4.dev')
-	.action(function (slug) {
-		simon.add(slug);
+// Add the currently configured domain to the hosts file
+program.command('add')
+	.description('Adds a new website for the current project')
+	.action(function () {
+		configureSimon(simon, config, program);
+		simon.add(program.subdomain);
 	});
 
-// Remove a new SoapBox
-program.command('remove <slug>')
-	.description('Removes the local SoapBox at <slug>.soapboxv4.dev')
-	.action(function (slug) {
-		simon.remove(slug);
+// Remove the currently configured domain from the hosts file
+program.command('remove')
+	.description('Removes the website for the current project')
+	.action(function () {
+		configureSimon(simon, config, program);
+		simon.remove(program.subdomain);
 	});
-*/
+
 
 // Run bower
 program.command('bower *')
@@ -184,6 +187,14 @@ program.command('grunt *')
 		configureSimon(simon, config, program);
 		args = parseArgs('grunt');
 		simon.grunt.apply(simon, args);
+	});
+
+// Fix permissions on the app/storage folder
+program.command('permissions')
+	.description('Fix permissions on the app/storage folder (UNIX only)')
+	.action(function () {
+		configureSimon(simon, config, program);
+		simon.permissions();
 	});
 
 // Initialize the app
