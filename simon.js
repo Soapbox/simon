@@ -143,7 +143,7 @@ Simon.prototype = {
 		if (vagrant) {
 
 			// Execute this command on the VM
-			command = "vagrant ssh -c 'cd /vagrant && " + command.replace(/'/, "\\'") + "'";
+			command = "vagrant ssh -c 'cd " + this.config.vagrantDir + " && " + command.replace(/'/, "\\'") + "'";
 		}
 
 		util.puts(('\n> Running ' + command).cyan);
