@@ -14,9 +14,8 @@
 	/\__/ /| || | | | | || (_) || | | |
 	\____/ |_||_| |_| |_| \___/ |_| |_|
 
-	Command-line Utility for SoapBox Devs.
-	Make sure you run `npm install` before using
-	See `./simon help` for more info
+	Command-line Interface for SoapBox Devs.
+	See `simon help` for more info
 
 	© 2014 SoapBox Innovations Inc.
 */
@@ -31,7 +30,6 @@ if (cli.program.args.length === 0) {
 		cli.options,
 		cli.program
 	);
-
 
 	// No args found, run the watch task with interactive mode
 	cli.simon.watch();
