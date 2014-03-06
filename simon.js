@@ -70,6 +70,8 @@ Simon.prototype = {
 			);
 		}
 
+		config.vagrant = !config.local;
+
 		this.config = config;
 		return this.config;
 	},
@@ -433,10 +435,16 @@ Simon.prototype = {
 		@return {EventEmmiter}
 	*/
 	start: function () {
-		this.runTasks([{
-			name: 'vagrant',
-			args: ['up'],
-		}, {
+		var tasks = [];
+
+		if (this.config.vagrant) {
+			tasks.push({
+				name: 'vagrant',
+				args: ['up'],
+			});
+		}
+
+		tasks.push({
 			name: 'composer',
 			args: ['install'],
 		}, {
@@ -451,7 +459,9 @@ Simon.prototype = {
 		}, {
 			name: 'npm',
 			args: ['start']
-		}]);
+		});
+
+		this.runTasks(tasks);
 	},
 
 	/**

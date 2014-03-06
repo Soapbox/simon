@@ -47,7 +47,7 @@ function configureSimon(simon, config, program, skipSimonJsonCheck) {
 		process.exit();
 	}
 
-	config.vagrant = !program.local;
+	config.local = !!program.local;
 	config.hhvm = !!program.super;
 	config.help = program.outputHelp.bind(program);
 	config.banner = fs.readFileSync(path.join(__dirname, 'lib', 'banner.txt'), {
