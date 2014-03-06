@@ -18,7 +18,7 @@ The development interface for SoapBox. Can be used specifically for any project 
 
 ## Getting Started
 
-First download the [latest release tarball](https://github.com/nfrasser/simon/releases/latest), then install globally with NPM:
+First download the [latest tarball](https://github.com/nfrasser/simon/releases/latest), then install globally with NPM
 
 ```bash
 npm install -g ~/Downloads/simon-0.0.x.tar.gz
@@ -26,18 +26,28 @@ npm install -g ~/Downloads/simon-0.0.x.tar.gz
 
 You now have access to the `simon` command across your system.
 
+### Updating Simon
+
+To update Simon you'll have to remove the currently installed package
+```bash
+npm uninstall -g soapbox-simon
+```
+
+then follow the installation steps above for the latest release.
+
+
 ### Creating a `simon.json` file
 
 You need to have a `simon.json` file in your project's root directory before using Simon for development. Here's the sample file with all available options and their defaults:
 
 ```js
 {
-	"hhvm": false,					// Run PHP commands with HHVM instead
-	"vagrant": false,				// Run all commands (except Node) on the VM
-	"prompt": 'Simon says (enter a command) > ',	// The interactive mode prompt
-	"banner": 'SoapBox Simon',			// Value of the banner (set by the CLI)
-	"ip": '127.0.0.1',				// Local IP address for project
-	"url": 'localhost'				// Local URL for project
+	"hhvm": false,								// Run PHP commands with HHVM instead
+	"vagrant": false,							// Run all commands (except Node) on the VM
+	"prompt": 'Simon says (enter a command) > ',// The interactive mode prompt
+	"banner": 'SoapBox Simon',					// Value of the banner (set by the CLI)
+	"ip": '127.0.0.1',							// Local IP address for project
+	"url": 'localhost'							// Local URL for project
 }
 ```
 
@@ -91,9 +101,9 @@ If your site requires multiple subdomains, run
 sudo simon add <subdomain>
 ```
 
-## Usage Simon for SoapBox development
+## Using Simon for SoapBox development
 
-Make sure you have all the above prequisites installed, and that your project has a valid Vagrantfile. Whenever you begin your day of development or switch branches on git, run
+Make sure you have all the above prequisites installed, and that your project has valid Vagrantfile and simon.json files. Whenever you begin your day of development or switch branches on git, run
 
 ```
 simon start
@@ -128,15 +138,27 @@ After running `simon start`, run `simon` without any arguments to enter _interac
 simon
 ```
 
-Interactive mode is optional for day-to-day backend development, but front-end developers will have to keep it running, as it's responsible for running the Grunt watch task recompiles the front-end when a file changes.
+Interactive mode is optional for day-to-day backend development, but front-end developers will have to keep it running. It's responsible for running the Grunt watch task recompiles the front-end when a file changes.
 
 From interactive mode you can run most of the commands available from `simon help`
 ```bash
 $ simon
-Simon says (enter a command)
+Simon says (enter a command):
 refresh
 
-Running php artisan migrate:refresh --seed
+> Running php artisan migrate:refresh --seed
+
+...
+
+Database refreshed and seeded successfully
+
+Simon says (enter a command):
+
+```
+
+You can also run interactive mode with the command-line options. For example, running `simon -u` will ensure that any time the `artisan` command is called from interactive mode, it happens on the Vagrant VM.
+
+You can safely exit out of interactive mode at any time by typing `stop` or `exit`.
 
 ***
 Copyright © 2014 SoapBox Innovations Inc.
