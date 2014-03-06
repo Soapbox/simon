@@ -42,12 +42,11 @@ You need to have a `simon.json` file in your project's root directory before usi
 
 ```js
 {
-	"hhvm": false,								// Run PHP commands with HHVM instead
-	"vagrant": false,							// Run all commands (except Node) on the VM
-	"prompt": 'Simon says (enter a command) > ',// The interactive mode prompt
-	"banner": 'SoapBox Simon',					// Value of the banner (set by the CLI)
-	"ip": '127.0.0.1',							// Local IP address for project
-	"url": 'localhost'							// Local URL for project
+	"hhvm": false,				// Run PHP commands with HHVM instead
+	"local": false,				// Run all commands locally instead of on the VM
+	"ip": '127.0.0.1',			// Local IP address for project
+	"domain": 'localhost',		// Local URL for project
+	"vagrantDir": '/vagrant',	// Name of shared directory on the VM
 }
 ```
 
