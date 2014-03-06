@@ -20,7 +20,7 @@ The development interface for SoapBox. Can be used specifically for any project 
 
 First download the [latest tarball](https://github.com/nfrasser/simon/releases/latest), then install globally with NPM
 
-```bash
+```
 npm install -g ~/Downloads/simon-0.0.x.tar.gz
 ```
 
@@ -29,7 +29,7 @@ You now have access to the `simon` command across your system.
 ### Updating Simon
 
 To update Simon you'll have to remove the currently installed package
-```bash
+```
 npm uninstall -g soapbox-simon
 ```
 
@@ -55,7 +55,7 @@ You need to have a `simon.json` file in your project's root directory before usi
 
 Once you have your `simon.json` file, navigate to your project's root directory and run `simon help` to view the options you have available:
 
-```bash
+```
 $ simon help
 
   Usage: simon [options] [command]
@@ -89,7 +89,7 @@ $ simon help
 
 As soon as you have your project directory, navigate to it and run
 
-```bash
+```
 sudo simon add
 ```
 
@@ -97,7 +97,7 @@ Simon will add the IP address of the site (as specified in `simon.json`) to the 
 
 If your site requires multiple subdomains, run
 
-```bash
+```
 sudo simon add <subdomain>
 ```
 
@@ -120,28 +120,31 @@ This does a few things
 
 And that's all you should need until someone other than your changes your current branch!
 
-### Running on Vagrant with the `--up` option
+### Running locally with the `--local` option
 
-When you use Simon's `--up` or `-u` option, all commands (except for most Node.js commands for performance reasons) will be run on the Vagrant virtual machine.
+By default, all of Simon's commands (except for most Node.js commands for performance reasons) run on the Vagrant VM. When you use Simon's `--local` or `-l` option, all commands will run on your local machine.
 
-```bash
-simon -v start
+For example
+
+```
+simon -l start
 ```
 
-Will perform the startup process above, except that `composer` and `artisan` will run on the VM rather than locally.
+will perform the startup process above, except  `composer` and `artisan` will run locally rather than on the VM.
 
 ### Interactive mode
 
 After running `simon start`, run `simon` without any arguments to enter _interactive mode_. Here you'll be able run some useful SoapBox-related commands in the mini "Simon says" shell.
 
-```bash
+```
 simon
 ```
 
 Interactive mode is optional for day-to-day backend development, but front-end developers will have to keep it running. It's responsible for running the Grunt watch task recompiles the front-end when a file changes.
 
 From interactive mode you can run most of the commands available from `simon help`
-```bash
+
+```
 $ simon
 Simon says (enter a command):
 refresh
@@ -156,7 +159,7 @@ Simon says (enter a command):
 
 ```
 
-You can also run interactive mode with the command-line options. For example, running `simon -u` will ensure that any time the `artisan` command is called from interactive mode, it happens on the Vagrant VM.
+You can also run interactive mode with the command-line options. For example, running `simon -l` will ensure that the `artisan` interactive command always calls `php artisan` on the host machine.
 
 You can safely exit out of interactive mode at any time by typing `stop` or `exit`.
 
