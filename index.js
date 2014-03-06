@@ -201,13 +201,13 @@ program.command('*')
 	});
 
 program.on('help', function () {
-	console.log('  Run ./simon without arguments to enter ' + 'interactive mode\n'.bold);
+	console.log('  Run simon without arguments to enter ' + 'interactive mode\n'.bold);
 	console.log([
 		'  If you\'re running a proxy command, make sure you specify any',
-		'  options to simon ' + 'before'.bold + ' the command.\n',
+		'  options to simon ' + 'before'.bold + ' the command you want to call.\n',
 		'  In this command, the -s options will be applied to simon, and the --debug',
 		'  options will be applied to phpunit:\n',
-		'      ./simon -s phpunit --debug\n'
+		'      simon -s phpunit --debug\n'
 	].join('\n'));
 });
 
