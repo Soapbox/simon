@@ -71,17 +71,21 @@ $ simon help
     artisan                Proxies the local php artisan command
     phpunit                Proxies the local phpunit command
     refresh                Reexecutes migrations and seeds the database
+    add                    Adds a new website for the current project
+    remove                 Removes the website for the current project
     bower                  Proxies the local bower command
     grunt                  Proxies the local grunt command
+    permissions            Fix permissions on the app/storage folder (UNIX only)
     start                  Initialize the development environment
     *                      Run a given Grunt task
 
   Options:
 
-    -h, --help     output usage information
-    -V, --version  output the version number
-    -s, --super    Run PHP commands such as PHPUnit and Artisan with HHVM.
-    -u, --up       Run non-Node commands on the Vagrant VM by default
+    -h, --help          output usage information
+    -V, --version       output the version number
+    -s, --super         Run PHP commands such as PHPUnit and Artisan with HHVM.
+    -l, --local         Run all commands locally instead of on the Vagrant VM.
+    --subdomain [slug]  Specify a subdomain for the "add" and "remove" commands
 
 ```
 
@@ -98,7 +102,7 @@ Simon will add the IP address of the site (as specified in `simon.json`) to the 
 If your site requires multiple subdomains, run
 
 ```
-sudo simon add <subdomain>
+sudo simon add --subdomain <subdomain>
 ```
 
 ## Using Simon for SoapBox development
@@ -111,26 +115,14 @@ simon start
 
 This does a few things
 
-1. Installs, provitions, and boots up the Vagrant virtual machine that hosts your website
+1. Installs, provisions, and boots up the Vagrant virtual machine that hosts your website
 2. Installs Composer dependencies
 3. Performs any outstanding database migrations with `artisan`
 4. Installs NPM development dependencies (for Grunt)
 5. Installs Bower front-end dependencies
-6. Runs `npm start`, which is a specified in `package.json` and is usually the default Grunt task
+6. Runs `npm start` (which is a specified in the project's `package.json` and is usually the default Grunt task)
 
-And that's all you should need until someone other than your changes your current branch!
-
-### Running locally with the `--local` option
-
-By default, all of Simon's commands (except for most Node.js commands for performance reasons) run on the Vagrant VM. When you use Simon's `--local` or `-l` option, all commands will run on your local machine.
-
-For example
-
-```
-simon -l start
-```
-
-will perform the startup process above, except  `composer` and `artisan` will run locally rather than on the VM.
+And that's all you should need until the current branch changes!
 
 ### Interactive mode
 
@@ -162,6 +154,19 @@ Simon says (enter a command):
 You can also run interactive mode with the command-line options. For example, running `simon -l` will ensure that the `artisan` interactive command always calls `php artisan` on the host machine.
 
 You can safely exit out of interactive mode at any time by typing `stop` or `exit`.
+
+### Running commands on the host machine with the `--local` option
+
+By default, all of Simon's commands (except for most Node.js commands for performance reasons) run on the Vagrant VM. When you use Simon's `--local` or `-l` option, all commands will run on your local machine.
+
+For example
+
+```
+simon -l start
+```
+
+will perform the startup process above, except  `composer` and `artisan` will run locally rather than on the VM.
+
 
 ***
 Copyright © 2014 SoapBox Innovations Inc.
