@@ -26,5 +26,9 @@
     "bower": "^1.2.8",
     "grunt-cli": "^0.1.13",
     "colors": "^0.6.2"
-  }
+  },
+  "bin": {
+    "simon": "bin/simon"
+  },
+  "preferGlobal": true
 }
