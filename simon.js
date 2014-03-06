@@ -61,7 +61,7 @@ Simon.prototype = {
 			config || {}
 		);
 
-		config.prompt = (config.prompt || '').yellow;
+		config.prompt = ('\n' + config.prompt || '').yellow;
 
 		if (!config.help) {
 			console.warn(
@@ -80,7 +80,7 @@ Simon.prototype = {
 	*/
 	_triggerPrompt: function () {
 		if (this._hasPrompt) {
-			this._showPrompt = this._showPrompt || this._generateShowPrompt();
+			this._generateShowPrompt();
 			this._showPrompt();
 		}
 	},
@@ -93,9 +93,10 @@ Simon.prototype = {
 	*/
 	_generateShowPrompt: function () {
 		var simon = this;
-		return _.debounce(function () {
-			util.puts('\n' + simon.config.prompt);
+		this._showPrompt = this._showPrompt || _.debounce(function () {
+			util.puts(simon.config.prompt);
 		}, 3000);
+		return this._showPrompt;
 	},
 
 	/**
@@ -107,6 +108,7 @@ Simon.prototype = {
 		this._runningTasks.map(function (task) {
 			task.kill();
 		});
+		this._runningTasks.length = 0;
 	},
 
 
@@ -143,7 +145,7 @@ Simon.prototype = {
 			command = "vagrant ssh -c 'cd /vagrant && " + command.replace(/'/, "\\'") + "'";
 		}
 
-		util.puts(('Running ' + command).cyan);
+		util.puts(('\n> Running ' + command).cyan);
 
 		var task = cp.exec(command, {
 			cwd: process.cwd()
@@ -162,8 +164,7 @@ Simon.prototype = {
 		if (this._hasPrompt) {
 
 			// Get the prompt function
-			showPrompt = this._showPrompt || this._generateShowPrompt();
-			this.showPrompt = showPrompt;
+			showPrompt = this._generateShowPrompt();
 
 			// Execute the showPrompt function every time there's an output
 			task.stdout.on('data', showPrompt);
@@ -202,8 +203,7 @@ Simon.prototype = {
 
 		if (this._hasPrompt) {
 
-			showPrompt = this._showPrompt || this._generateShowPrompt();
-			this._showPrompt = showPrompt;
+			showPrompt = this._generateShowPrompt();
 
 			task.stdout.on('data', function () {
 				showPrompt();
@@ -258,6 +258,7 @@ Simon.prototype = {
 				util.puts(('Tasks completed ' + (
 					code > 0 ? 'with errors' : 'without errors'
 				)).yellow);
+				emitter.removeAllListeners();
 			});
 
 			// Done event
@@ -269,12 +270,17 @@ Simon.prototype = {
 			// Error event
 			emitter.addListener('error', function (task, error) {
 
+				if (!error) {
+					error = task;
+					task = 'unknown';
+				}
+
 				if (error) {
 					util.puts(('' + error).red);
 				}
 
 				util.puts((
-					'The ' + task + ' was cancelled or encountered an error!'
+					'The task "' + task + '" was cancelled or encountered an error!'
 				).red);
 				emitter.emit('exit', 1);
 			});
@@ -287,9 +293,9 @@ Simon.prototype = {
 				task = this[tasks[0].name](tasks[0].args);
 			} catch (e) {
 				// Send an error function and return
-				setImmediate(function (emitter) {
-					emitter.emit('error', tasks[0].name || 'unknown', e);
-				}, emitter);
+				setImmediate(function (emitter, task) {
+					emitter.emit('error', task, e);
+				}, emitter, tasks[0].name || 'unknown');
 				return emitter;
 			}
 		}
@@ -501,14 +507,19 @@ Simon.prototype = {
 	},
 
 	/**
-		description
+		Build the front end end begin watching for changes
 		@class		class
 		@extends	extends
 		@namespace	namespace
 	*/
-	rewatch: function () {
-		this._killRunningTasks();
-		return this.grunt();
+	watch: function () {
+		return this.runTasks([{
+			name: 'npm',
+			args: ['start']
+		}, {
+			name: 'grunt',
+			args: ['watch']
+		}]);
 	},
 
 	/**
@@ -527,13 +538,13 @@ Simon.prototype = {
 	*/
 	help: function () {
 
-		util.puts((this.config.banner + '').cyan);
+		util.puts(('\n' + this.config.banner + '').cyan);
 
 		if (typeof this.config.help === 'function') {
 			this.config.help();
 		}
 
-		util.puts('    Note: Command-line options may not be available in interactive mode\n');
+		util.puts('    Note: Command-line options may not be available in interactive mode');
 		this._triggerPrompt();
 	},
 
@@ -666,29 +677,35 @@ Simon.prototype = {
 			this._runningTasks.length ? '' : this.config.prompt,
 			function (command) {
 				var args = command.trim().split(/\s+/), hasCommand = false,
-					isQuit = options.isQuitlisted(command);
+					isBlacklisted = options.isBlacklisted(args[0]),
+					isQuit = options.isQuitlisted(args[0]);
 
 				command = args.shift();
 				args = args.join(' ');
 
-
 				// Check to see if the given command can be called
 				if (typeof simon[command] === 'function' &&
 					!/^_/.test(command) &&			// Can't be private
-					!options.isBlacklisted(command)	// Can't be blacklisted
+					!isBlacklisted					// Can't be blacklisted
 				) {
 					hasCommand = true;
 					simon[command].call(simon, args);
 				}
 
-
-				if (!hasCommand && !isQuit) {
+				if (isBlacklisted) {
+					console.warn((
+						'"' + command + '" cannot be called from interactive mode'
+					).magenta);
+					simon._triggerPrompt();
+				} else if (!hasCommand && !isQuit) {
 
 					args = command + ' ' + args;
 
 					// Run the default grunt task
 					simon.grunt.call(simon, args);
 				}
+
+
 
 				if (isQuit) {
 					process.exit();

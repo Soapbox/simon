@@ -25,9 +25,18 @@ var cli = require('../index.js');
 
 if (cli.program.args.length === 0) {
 
-	// No args found, run the default grunt task
+	// Add additional configuration options
+	cli.configure(
+		cli.simon,
+		cli.options,
+		cli.program
+	);
+
+
+	// No args found, run the watch task with interactive mode
+	cli.simon.watch();
 	cli.simon.prompt();
-	cli.simon.grunt();
+
 } else {
 
 	// Simon will not be running interactive mode, close the prompt

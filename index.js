@@ -7,15 +7,6 @@ var fs = require('fs'),
 	Command,	// Constructor class for Commander
 	pkg, config, simon;
 
-if (!fs.existsSync(configFileName)) {
-	// Make sure simon.json is defined
-	console.error(
-		'    No simon.json file found. \n' +
-		'    Run "simon help" to learn how to set this up'
-	);
-	process.exit();
-}
-
 require('colors');
 
 program = require('commander');
@@ -43,6 +34,19 @@ function parseArgs(command) {
 }
 
 function configureSimon(simon, config, program) {
+
+	if (!fs.existsSync(configFileName)) {
+
+		// Make sure simon.json is defined
+		console.error([
+			'',
+			'    No simon.json file found. Visit\n',
+			'      https://github.com/nfrasser/simon',
+			''
+		].join('\n'));
+		process.exit();
+	}
+
 	config.vagrant = !!program.up;
 	config.hhvm = !!program.super;
 	config.help = program.outputHelp.bind(program);
@@ -75,7 +79,7 @@ program.version(pkg.version)
 program.command('help')
 	.description('Show this help block')
 	.action(function () {
-		configureSimon(simon, config, program);
+		//configureSimon(simon, config, program);
 		simon.help();
 	});
 
@@ -215,5 +219,7 @@ program.parse(process.argv);
 
 module.exports = {
 	program: program,
-	simon: simon
+	simon: simon,
+	options: config,
+	configure: configureSimon
 };
