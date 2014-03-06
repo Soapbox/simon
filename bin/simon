@@ -23,13 +23,13 @@
 
 var cli = require('../index.js');
 
-// Parse command-line args
-cli.program.parse(process.argv);
-
 if (cli.program.args.length === 0) {
 
 	// No args found, run the default grunt task
 	cli.simon.prompt();
 	cli.simon.grunt();
-}
+} else {
 
+	// Simon will not be running interactive mode, close the prompt
+	cli.simon.closeRl();
+}

@@ -1,8 +1,8 @@
 var fs = require('fs'),				// File system
-	path = require('path'),         // System path
+	path = require('path'),			// System path
 	util = require('util'),			// System shell input/output access
 	readline = require('readline'),	// Get a line from input
-	Emmiter = require('events').EventEmmiter,
+	events = require('events'),
 	cp = require('child_process'),	// Child Process (for running shell commands). http://nodejs.org/docs/latest/api/child_process.html
 	eol = require('os').EOL,		// End of Line character
 	//pkg = require('./package.json'),// package.json info
@@ -19,19 +19,9 @@ require('colors');
 */
 function Simon(config) {
 
-	this.outputHelp = config.outputHelp;
-	this.config = _.extend(
-		this.constructor.DEFAULTS, config || {}
-	);
-
-	config.prompt = config.prompt.yellow;
-
-	if (!this.outputHelp) {
-		util.warn(
-			'Warning: The "help" function was not included with the config'.yellow
-		);
-	}
-
+	this.constructor = Simon;
+	this.configure(config);
+	this.Simon = Simon;
 	this.init();
 }
 
@@ -51,7 +41,6 @@ Simon.prototype = {
 
 		var simon = this;
 
-		this.constructor = Simon;
 		this._runningTasks = [];
 		this._rl = readline.createInterface({
 			input: process.stdin,
@@ -61,8 +50,27 @@ Simon.prototype = {
 
 		process.on('exit', function () {
 			simon._killRunningTasks();
-			simon._rl.close();
+			simon.closeRl();
 		});
+	},
+
+	configure: function (config) {
+
+		config = _.extend(
+			this.config || this.constructor.DEFAULTS,
+			config || {}
+		);
+
+		config.prompt = (config.prompt || '').yellow;
+
+		if (!config.help) {
+			console.warn(
+				'Warning: The "help" function was not included with the config'.yellow
+			);
+		}
+
+		this.config = config;
+		return this.config;
 	},
 
 	/**
@@ -99,6 +107,11 @@ Simon.prototype = {
 		this._runningTasks.map(function (task) {
 			task.kill();
 		});
+	},
+
+
+	closeRl: function () {
+		this._rl.close();
 	},
 
 	/**
@@ -217,7 +230,7 @@ Simon.prototype = {
 	/**
 		Run a series of tasks consecutively. Tasks will not start running until
 		the previous task has completed. This method is asynchronous and will
-		return an event emmiter. Here are the available events.
+		return an event emitter. Here are the available events.
 
 			'done' - fired when all the tasks have finished successfully.
 			'error' - fired when a task did not successfully complete
@@ -233,14 +246,12 @@ Simon.prototype = {
 	*/
 	runTasks: function (tasks, _emitter) {
 
-		//
-
 		var task, simon = this;
 		var emitter = _emitter;
 
 		if (!emitter) {
 
-			emitter = new Emmiter();
+			emitter = new events.EventEmitter();
 
 			// Exit event
 			emitter.addListener('exit', function (code) {
@@ -252,7 +263,7 @@ Simon.prototype = {
 			// Done event
 			emitter.addListener('done', function () {
 				util.puts('All tasks completed successfully!'.green);
-				emitter.emmit('exit', 0);
+				emitter.emit('exit', 0);
 			});
 
 			// Error event
@@ -265,7 +276,7 @@ Simon.prototype = {
 				util.puts((
 					'The ' + task + ' was cancelled or encountered an error!'
 				).red);
-				emitter.emmit('exit', 1);
+				emitter.emit('exit', 1);
 			});
 		}
 
@@ -291,7 +302,7 @@ Simon.prototype = {
 
 				if (code) {
 					// Errored out
-					emitter.emmit('error', task);
+					emitter.emit('error', task);
 
 				} else {
 
@@ -319,7 +330,7 @@ Simon.prototype = {
 	*/
 	vagrant: function () {
 		// Do NOT use vagrant to execute vagrant
-		this.exec('vagrant', arguments, false);
+		return this.exec('vagrant', arguments, false);
 	},
 
 	/**
@@ -338,7 +349,7 @@ Simon.prototype = {
 		@return	{ChildProcess}
 	*/
 	php: function () {
-		if (this.config.super) {
+		if (this.config.hhvm) {
 			return this.exec('hhvm', arguments);
 		}
 		return this.exec('php', arguments);
@@ -431,8 +442,8 @@ Simon.prototype = {
 			name: 'bower',
 			args: ['install'],
 		}, {
-			name: 'grunt',
-			args: ['default']
+			name: 'npm',
+			args: ['start']
 		}]);
 	},
 
@@ -442,7 +453,7 @@ Simon.prototype = {
 		@return {EventEmmiter}
 	*/
 	install: function () {
-		this.runTasks({
+		this.runTasks([{
 			name: 'npm',
 			args: ['install']
 		}, {
@@ -451,7 +462,7 @@ Simon.prototype = {
 		}, {
 			name: 'bower',
 			args: ['install']
-		});
+		}]);
 	},
 
 	/**
@@ -460,7 +471,7 @@ Simon.prototype = {
 		@return {EventEmmiter}
 	*/
 	update: function () {
-		this.runTasks({
+		this.runTasks([{
 			name: 'npm',
 			args: ['update']
 		}, {
@@ -469,7 +480,7 @@ Simon.prototype = {
 		}, {
 			name: 'bower',
 			args: ['update']
-		});
+		}]);
 	},
 
 	/**
@@ -507,7 +518,7 @@ Simon.prototype = {
 	*/
 	cancel: function () {
 		this._killRunningTasks();
-		this.triggerPrompt();
+		this._triggerPrompt();
 	},
 
 	/**
@@ -523,7 +534,7 @@ Simon.prototype = {
 		}
 
 		util.puts('    Note: Command-line options may not be available in interactive mode\n');
-		this.triggerPrompt();
+		this._triggerPrompt();
 	},
 
 	/**
@@ -550,7 +561,7 @@ Simon.prototype = {
 			'^127\\.0\\.0\\.1\\s+' + name + '\\.soapboxv4\\.dev$', 'm'
 		);
 
-		this.triggerPrompt();
+		this._triggerPrompt();
 
 		// First check if the slug exists
 		if (hosts.match(existingMatch)) {
@@ -615,7 +626,7 @@ Simon.prototype = {
 		}) || '';
 
 		var existingMatch = new RegExp(eol + '[0-9.]+\\s+' + name + '\\.soapboxv4\\.dev' + eol);
-		this.triggerPrompt();
+		this._triggerPrompt();
 
 		// First check if the slug exists
 		if (hosts.match(existingMatch)) {
@@ -691,9 +702,9 @@ Simon.prototype = {
 };
 
 // Constructor options
-Simon.LOCATIONS = require('./lib/locations');
-Simon.PROMPT_OPTIONS = require('./lib/prompt-options');
-Simon.DEFAULTS = require('./lib/defaults');
+Simon.LOCATIONS = require(path.join(__dirname, 'lib', 'locations'));
+Simon.PROMPT_OPTIONS = require(path.join(__dirname, 'lib', 'prompt-options'));
+Simon.DEFAULTS = require(path.join(__dirname, 'lib', 'defaults'));
 
 module.exports = function (config) {
 	return new Simon(config || {});

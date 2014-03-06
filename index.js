@@ -1,8 +1,8 @@
 // Command-line interface
 
 var fs = require('fs'),
+	path = require('path'),	// Path. http://nodejs.org/api/path.html
 	configFileName = process.cwd() + path.sep + 'simon.json',
-	path,		// Path. http://nodejs.org/api/path.html
 	program,	// Commander. Command-line interface provider. https://github.com/visionmedia/commander.js
 	Command,	// Constructor class for Commander
 	pkg, config, simon;
@@ -18,20 +18,13 @@ if (!fs.existsSync(configFileName)) {
 
 require('colors');
 
-path = require('path');
 program = require('commander');
 Command = program.Command;
-pkg = require('./package.json');// package.json info
-config = require('./simon.json');
-
-// Custom config
-config.help = program.outputHelp.bind(program);
-config.banner = fs.readFileSync('./lib/banner.txt', {
-	encoding: 'utf8'
-});
+pkg = require(path.join(__dirname, 'package.json')); // package.json info
+config = require(configFileName);
 
 // Instantiate Simon!
-simon = require('./simon.js')(config);
+simon = require(path.join(__dirname, 'simon.js'))();
 
 
 // Don't exist when there's an unknown options
@@ -49,6 +42,19 @@ function parseArgs(command) {
 	return args.slice(commandIndex + 1);
 }
 
+function configureSimon(simon, config, program) {
+	config.vagrant = !!program.up;
+	config.hhvm = !!program.super;
+	config.help = program.outputHelp.bind(program);
+	config.banner = fs.readFileSync(path.join(__dirname, 'lib', 'banner.txt'), {
+		encoding: 'utf8'
+	});
+
+	simon.configure(config);
+
+	return simon;
+}
+
 // Find locations of all the files
 /*if (!fs.existsSync(locations.hostsFile)) {
 	util.error('Warning'.bold.yellow + ': Could not read the hosts file.'.yellow);
@@ -63,12 +69,13 @@ function parseArgs(command) {
 
 program.version(pkg.version)
 	.option('-s, --super', 'Run PHP commands such as PHPUnit and Artisan with HHVM.')
-	.option('-g, --vagrant', 'Run non-Node commands on the Vagrant VM by default');
+	.option('-u, --up', 'Run non-Node commands on the Vagrant VM by default');
 
 // Run the default task
 program.command('help')
 	.description('Show this help block')
 	.action(function () {
+		configureSimon(simon, config, program);
 		simon.help();
 	});
 
@@ -76,6 +83,7 @@ program.command('help')
 program.command('install')
 	.description('Installs all vendor dependencies from NPM, Composer, and Bower')
 	.action(function () {
+		configureSimon(simon, config, program);
 		simon.install();
 	});
 
@@ -83,13 +91,24 @@ program.command('install')
 program.command('update')
 	.description('Updates all vendor dependencies from NPM, Composer, and Bower')
 	.action(function () {
+		configureSimon(simon, config, program);
 		simon.update();
+	});
+
+// Run Vagrant
+program.command('vagrant *')
+	.description('Proxies the global vagrant command')
+	.action(function (args) {
+		configureSimon(simon, config, program);
+		args = parseArgs('vagrant');
+		simon.vagrant.apply(simon, args);
 	});
 
 // Run NPM
 program.command('npm *')
 	.description('Proxies the global npm command')
 	.action(function (args) {
+		configureSimon(simon, config, program);
 		args = parseArgs('npm');
 		simon.npm.apply(simon, args);
 	});
@@ -98,6 +117,7 @@ program.command('npm *')
 program.command('composer *')
 	.description('Proxies the global composer command')
 	.action(function (args) {
+		configureSimon(simon, config, program);
 		args = parseArgs('composer');
 		simon.composer.apply(simon, args);
 	});
@@ -106,6 +126,7 @@ program.command('composer *')
 program.command('artisan *')
 	.description('Proxies the local php artisan command')
 	.action(function (args) {
+		configureSimon(simon, config, program);
 		args = parseArgs('artisan');
 		simon.artisan.apply(simon, args);
 	});
@@ -115,6 +136,7 @@ program.command('phpunit *')
 	.description('Proxies the local phpunit command')
 	.action(function (args) {
 		//args = arguments.length > 1 ? Array.prototype.slice.call(arguments, 0, -1) : [];
+		configureSimon(simon, config, program);
 		args = parseArgs('phpunit');
 		simon.phpunit.apply(simon, args);
 	});
@@ -123,6 +145,7 @@ program.command('phpunit *')
 program.command('refresh')
 	.description('Reexecutes migrations and seeds the database')
 	.action(function () {
+		configureSimon(simon, config, program);
 		simon.refresh();
 	});
 
@@ -145,6 +168,7 @@ program.command('remove <slug>')
 program.command('bower *')
 	.description('Proxies the local bower command')
 	.action(function (args) {
+		configureSimon(simon, config, program);
 		args = parseArgs('bower');
 		simon.bower.apply(simon, args);
 	});
@@ -153,6 +177,7 @@ program.command('bower *')
 program.command('grunt *')
 	.description('Proxies the local grunt command')
 	.action(function (args) {
+		configureSimon(simon, config, program);
 		args = parseArgs('grunt');
 		simon.grunt.apply(simon, args);
 	});
@@ -161,13 +186,8 @@ program.command('grunt *')
 program.command('start')
 	.description('Initialize the development environment')
 	.action(function () {
-		simon.init();
-	});
-
-program.command('init')
-	.description('Alias to the start command')
-	.action(function () {
-		simon.init();
+		configureSimon(simon, config, program);
+		simon.start();
 	});
 
 // Run a grunt command
@@ -175,15 +195,13 @@ program.command('*')
 	.description('Run a given Grunt task')
 	.action(function (task) {
 		var args = parseArgs(task);
+		configureSimon(simon, config, program);
 		args.unshift(task);
 		simon.grunt.apply(simon, args);
 	});
 
 program.on('help', function () {
 	console.log('  Run ./simon without arguments to enter ' + 'interactive mode\n'.bold);
-});
-
-program.on('help', function () {
 	console.log([
 		'  If you\'re running a proxy command, make sure you specify any',
 		'  options to simon ' + 'before'.bold + ' the command.\n',
@@ -193,7 +211,7 @@ program.on('help', function () {
 	].join('\n'));
 });
 
-config.help =
+program.parse(process.argv);
 
 module.exports = {
 	program: program,
