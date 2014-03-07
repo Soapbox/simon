@@ -1,0 +1,16 @@
+{
+	"hhvm": false,
+	"local": false,
+	"prompt": "Simon says (enter a command): ",
+	"banner": "SoapBox Simon",
+	"ip": "127.0.0.1",
+	"domain": "localhost",
+	"vagrant": {
+		"dir": "/vagrant",
+		"box": {
+			"name": "precise64",
+			"provider": "virtualbox",
+			"url": "http://files.vagrantup.com/precise64.box"
+		}
+	}
+}

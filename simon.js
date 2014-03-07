@@ -31,7 +31,7 @@ Simon.prototype = {
 	_hasPrompt: false,
 	_showPrompt: null,
 	_rl: null,
-	_regexpSafe: /([.?*+\^$\[\](){}|\-\\])/g,
+	_regExpSafe: /([.?*+\^$\[\](){}|\-\\])/g,
 
 	/**
 		Constructor
@@ -63,14 +63,6 @@ Simon.prototype = {
 		);
 
 		config.prompt = ('\n' + config.prompt || '').yellow;
-
-		if (!config.help) {
-			console.warn(
-				'Warning: The "help" function was not included with the config'.yellow
-			);
-		}
-
-		config.vagrant = !config.local;
 
 		this.config = config;
 		return this.config;
@@ -114,6 +106,23 @@ Simon.prototype = {
 		this._runningTasks.length = 0;
 	},
 
+	/**
+		Format a terminal command to use Vagrant
+		@method	_vagrantCommand
+		@param	{String} command
+		@return	{String} command
+	*/
+	_vagrantCommand: function (command) {
+		var config = this.config.vagrant;
+
+		if (typeof config !== 'object') {
+			return command;
+		}
+
+		// Single quotes may make this buggy
+		return "vagrant ssh -c 'cd " + config.dir + " && " + command.replace(/'/, "\\'") + "'";
+
+	},
 
 	closeRl: function () {
 		this._rl.close();
@@ -128,31 +137,37 @@ Simon.prototype = {
 			of the current shell
 		@return {ChildProcess} task
 	*/
-	exec: function (command, args, vagrant) {
+	exec: function (command, args, callback, local) {
 
 		var runningTasks = this._runningTasks,
 			showPrompt;
 
-		vagrant = typeof vagrant === 'undefined' ? (
-			this.config.vagrant || false
-		) : !!vagrant;
+		// Should this command be run locally (instead of on vagrant)?
+		local = typeof local === 'undefined' ? (
+			!!this.config.local
+		) : !!local;
 
+		// If string, make into array
+		args = typeof args === 'string' ? [args] : args;
+
+		// Build the command
 		if (args && args.length > 0) {
 			args = Array.prototype.slice.call(args);
 			command += (' ' + args.join(' '));
 		}
 
-		if (vagrant) {
+		if (!local) {
 
-			// Execute this command on the VM
-			command = "vagrant ssh -c 'cd " + this.config.vagrantDir + " && " + command.replace(/'/, "\\'") + "'";
+			// Execute this command on the Vagrant VM
+			command = this._vagrantCommand(command);
 		}
 
 		util.puts(('\n> Running ' + command).cyan);
 
+		// Run the task
 		var task = cp.exec(command, {
 			cwd: process.cwd()
-		});
+		}, callback);
 
 		// Redirect the output from this task to the process's stdout
 		task.stdout.pipe(process.stdout);
@@ -227,7 +242,7 @@ Simon.prototype = {
 	*/
 	execNodeFile: function (fileName, args) {
 		// Node files are always executed locally
-		return this.exec('node ' + fileName, args, false);
+		return this.exec('node ' + fileName, args, null, true);
 	},
 
 	/**
@@ -293,7 +308,7 @@ Simon.prototype = {
 		if (tasks.length) {
 			try {
 				// Attempt to execute the task
-				task = this[tasks[0].name](tasks[0].args);
+				task = this[tasks[0].name].apply(this, tasks[0].args);
 			} catch (e) {
 				// Send an error function and return
 				setImmediate(function (emitter, task) {
@@ -338,8 +353,8 @@ Simon.prototype = {
 		@return {ChildProcess}
 	*/
 	vagrant: function () {
-		// Do NOT use vagrant to execute vagrant
-		return this.exec('vagrant', arguments, false);
+		// ALWAYS exectute vagrant locally
+		return this.exec('vagrant', arguments, null, true);
 	},
 
 	/**
@@ -349,7 +364,7 @@ Simon.prototype = {
 	*/
 	npm: function () {
 		// NPM is always executed locally
-		return this.exec('npm', arguments, false);
+		return this.exec('npm', arguments, null, true);
 	},
 
 	/**
@@ -391,7 +406,7 @@ Simon.prototype = {
 	*/
 	phpunit: function () {
 		var args = [[
-			'vendor',
+			this.constructor.LOCATIONS.composerVendorFolder,
 			'bin',
 			'phpunit'
 		].join(path.sep)];
@@ -430,14 +445,78 @@ Simon.prototype = {
 	},
 
 	/**
-		Simon's `start` task - Boots up everything and what everyone
+		Simon's `start` task - Boots up everything and what everyone.
+		Not available from interactive mode.
+
 		@method	start
 		@return {EventEmmiter}
 	*/
 	start: function () {
-		var tasks = [];
 
-		if (this.config.vagrant) {
+		var simon = this,
+			vagrant = simon.config.vagrant,
+			box,
+			task;
+
+		// Get the list of boxes
+
+		if (this.config.local || !vagrant || !vagrant.box) {
+			return this._start();
+		}
+
+		box = vagrant.box;
+
+		task = this.exec('vagrant', [
+			'box',
+			'list'
+		], function (error, stdout, stderr) {
+
+			var boxRegExp;
+
+			// Run vagrant
+			if (error || stderr) {
+				if (error) {
+					console.error((error + ''.red));
+				}
+				if (stderr) {
+					console.error((stderr + ''.red));
+				}
+				process.exit();
+				return;
+			}
+
+			boxRegExp = new RegExp(
+				'^' + box.name.replace(simon.regExpSafe) + ' ' +
+				'\\(' + box.provider.replace(simon.regExpSafe) + '\\)$',
+				'm'
+			);
+
+			//console.log()
+			return simon._start(!boxRegExp.test(stdout));
+
+		}, true);
+
+
+	},
+
+
+	_start: function (installBox) {
+
+		var vagrant = this.config.vagrant,
+			tasks = [];
+
+		if (installBox && vagrant.box) {
+			tasks.push({
+				name: 'vagrant',
+				args: [
+					'box add',
+					vagrant.box.name,
+					vagrant.box.url
+				]
+			});
+		}
+
+		if (!this.config.local) {
 			tasks.push({
 				name: 'vagrant',
 				args: ['up'],
@@ -461,8 +540,9 @@ Simon.prototype = {
 			args: ['start']
 		});
 
-		this.runTasks(tasks);
+		return this.runTasks(tasks);
 	},
+
 
 	/**
 		Run the install methods for all the package managers
@@ -587,7 +667,7 @@ Simon.prototype = {
 		var locations = this.constructor.LOCATIONS,
 
 			// Makes a plain string safe for adding to a built up regexp
-			regexpSafe = this._regexpSafe,
+			regExpSafe = this._regExpSafe,
 
 			ip = this.config.ip,
 			domain = this.config.domain,
@@ -602,7 +682,7 @@ Simon.prototype = {
 		// Look for the config URL (with the given subdomain, if any
 		existingMatch = new RegExp(
 			'^[0-9.]+\\s+(' +
-			url.replace(regexpSafe, '\\$1') +
+			url.replace(regExpSafe, '\\$1') +
 			')$', 'm'
 		);
 
@@ -669,7 +749,7 @@ Simon.prototype = {
 		var locations = this.constructor.LOCATIONS,
 
 			// Makes a plain string safe for adding to a built up regexp
-			regexpSafe = this._regexpSafe,
+			regExpSafe = this._regExpSafe,
 
 			//ip = this.config.ip,
 			domain = this.config.domain,
@@ -684,7 +764,7 @@ Simon.prototype = {
 		existingMatch = new RegExp(
 			eol +
 			'[0-9.]+\\s+' +
-			url.replace(regexpSafe, '\\$1') +
+			url.replace(regExpSafe, '\\$1') +
 			eol
 		);
 
@@ -733,9 +813,20 @@ Simon.prototype = {
 
 			this._runningTasks.length ? '' : this.config.prompt,
 			function (command) {
-				var args = command.trim().split(/\s+/), hasCommand = false,
-					isBlacklisted = options.isBlacklisted(args[0]),
-					isQuit = options.isQuitlisted(args[0]);
+				var args = command.trim().split(/\s+/),
+					hasCommand = false,
+					isBlacklisted,
+					isQuit;
+
+				if (args.length === 0 || !args[0]) {
+					// No command, just prompt again
+					simon._triggerPrompt();
+					simon.prompt();
+					return;
+				}
+
+				isBlacklisted = options.isBlacklisted(args[0]);
+				isQuit = options.isQuitlisted(args[0]);
 
 				command = args.shift();
 				args = args.join(' ');
@@ -778,7 +869,7 @@ Simon.prototype = {
 // Constructor options
 Simon.LOCATIONS = require(path.join(__dirname, 'lib', 'locations'));
 Simon.PROMPT_OPTIONS = require(path.join(__dirname, 'lib', 'prompt-options'));
-Simon.DEFAULTS = require(path.join(__dirname, 'lib', 'defaults'));
+Simon.DEFAULTS = require(path.join(__dirname, 'lib', 'defaults.json'));
 
 module.exports = function (config) {
 	return new Simon(config || {});

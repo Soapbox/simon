@@ -2,7 +2,7 @@
 
 var fs = require('fs'),
 	path = require('path'),	// Path. http://nodejs.org/api/path.html
-	configFileName = process.cwd() + path.sep + 'simon.json',
+	configFileName = path.join(process.cwd(), 'simon.json'),
 	program,	// Commander. Command-line interface provider. https://github.com/visionmedia/commander.js
 	Command,	// Constructor class for Commander
 	pkg, config, simon;
@@ -12,13 +12,11 @@ require('colors');
 program = require('commander');
 Command = program.Command;
 pkg = require(path.join(__dirname, 'package.json')); // package.json info
-config = require(configFileName);
 
 // Instantiate Simon!
-simon = require(path.join(__dirname, 'simon.js'))();
+simon = require(path.join(__dirname, 'simon'))();
 
-
-// Don't exist when there's an unknown options
+// Don't exist when there's an unknown options (could belong to the proxy)
 Command.prototype.unknownOption = function (flag) {
 	console.warn();
 	console.warn("  Warning: unknown option `%s'", flag);
@@ -29,24 +27,29 @@ Command.prototype.unknownOption = function (flag) {
 // Parse given commandline arguments
 function parseArgs(command) {
 	var args = process.argv,
-		commandIndex = args.indexOf(command);
+		commandIndex = command ? args.indexOf(command) : -1;
 	return args.slice(commandIndex + 1);
 }
 
+// Perform configuration based on simon.json
 function configureSimon(simon, config, program, skipSimonJsonCheck) {
 
-	if (!(skipSimonJsonCheck || fs.existsSync(configFileName))) {
+	if (!skipSimonJsonCheck && !fs.existsSync(configFileName)) {
 
 		// Make sure simon.json is defined
 		console.error([
 			'',
-			'    No simon.json file found. Visit\n',
-			'      https://github.com/nfrasser/simon',
-			''
+			'  No simon.json file found. Visit',
+			'    https://github.com/nfrasser/simon',
+			'  To find out how to set this up\n'
 		].join('\n'));
+
 		process.exit();
 	}
 
+	config = config || require(configFileName);
+
+	// Perform configuration
 	config.local = !!program.local;
 	config.hhvm = !!program.super;
 	config.help = program.outputHelp.bind(program);
@@ -232,5 +235,6 @@ module.exports = {
 	program: program,
 	simon: simon,
 	options: config,
-	configure: configureSimon
+	configure: configureSimon,
+	parse: parseArgs
 };
