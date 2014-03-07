@@ -127,12 +127,6 @@ If your site requires multiple subdomains, run
 sudo simon add --subdomain <subdomain>
 ```
 
-Next install the required VM. This will depend on your configuration in the Vagrantfile, but it will probably be **precise64**
-
-```
-vagrant box add precise64 http://files.vagrantup.com/precise64.box
-```
-
 ## Using Simon for SoapBox development
 
 Make sure you have all the above prequisites installed, and that your project has valid Vagrantfile and simon.json files. Whenever you begin your day of development or switch branches on git, run
