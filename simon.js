@@ -516,7 +516,7 @@ Simon.prototype = {
 			});
 		}
 
-		if (!this.config.local) {
+		if (!this.config.local && vagrant) {
 			tasks.push({
 				name: 'vagrant',
 				args: ['up'],
