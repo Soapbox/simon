@@ -40,17 +40,40 @@ then follow the installation steps above for the latest release.
 
 You need to have a `simon.json` file in your project's root directory before using Simon for development. Here's the sample file with all available options and their defaults:
 
-```js
+```json
 {
-	"hhvm": false,				// Run PHP commands with HHVM instead
-	"local": false,				// Run all commands locally instead of on the VM
-	"ip": '127.0.0.1',			// Local IP address for project
-	"domain": 'localhost',		// Local URL for project
-	"vagrantDir": '/vagrant',	// Name of shared directory on the VM
+	"hhvm": false,
+	"local": false,
+	"prompt": "Simon says (enter a command): ",
+	"ip": "127.0.0.1",
+	"domain": "localhost",
+	"vagrant": {
+		"dir": "/vagrant",
+		"box": {
+			"name": "precise64",
+			"provider": "virtualbox",
+			"url": "http://files.vagrantup.com/precise64.box"
+		}
+	}
 }
 ```
 
-### Options
+Here's what each of these do
+
+**`hhvm`** If true, will run all PHP commands (including PHPUnit and Composer) with the [HipHop Virtual Machine](http://www.hhvm.com/). Same as using the `--super` option.
+
+**`local`** If true, will not ssh into the Vagrant VM before running a command. Note that all Node commands (including NPM, Grunt, and Bower) _always_ run locally.
+
+**`prompt`** The question Simon asks you during interactive mode.
+
+**`ip`** IP address of the Vagrant machine. Should be the same as the IP on `config.vm.network` in the Vagrantfile.
+
+**`domain`** Domain name that resolves to the `ip`.
+
+**`vagrant`** Configuration hash for Vagrant. If set to `false`, Simon will not attempt to install a Vagrant VM and will attempt to run all commands locally.
+
+
+### Commands and Options
 
 Once you have your `simon.json` file, navigate to your project's root directory and run `simon help` to view the options you have available:
 
