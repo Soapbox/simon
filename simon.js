@@ -49,7 +49,7 @@ Simon.prototype = {
 			terminal: true
 		});
 
-		process.on('exit', function () {
+		process.on('close', function () {
 			simon._killRunningTasks();
 			simon.closeRl();
 		});
@@ -66,6 +66,27 @@ Simon.prototype = {
 
 		this.config = config;
 		return this.config;
+	},
+
+	_message: function (message, prefix) {
+		prefix = prefix || '📣';
+		util.puts(prefix + '  ' + message);
+	},
+
+	_success: function (message) {
+		this._message(message.green);
+	},
+
+	_error: function (message) {
+		this._message(message.red);
+	},
+
+	_warning: function (message) {
+		this._message(message.yellow);
+	},
+
+	_info: function (message) {
+		this._message(message.cyan);
 	},
 
 	/**
@@ -89,7 +110,9 @@ Simon.prototype = {
 	_generateShowPrompt: function () {
 		var simon = this;
 		this._showPrompt = this._showPrompt || _.debounce(function () {
-			util.puts(simon.config.prompt);
+			if (simon._hasPrompt) {
+				util.puts(simon.config.prompt);
+			}
 		}, 3000);
 		return this._showPrompt;
 	},
@@ -139,7 +162,8 @@ Simon.prototype = {
 	*/
 	exec: function (command, args, callback, local) {
 
-		var runningTasks = this._runningTasks,
+		var simon = this,
+			runningTasks = this._runningTasks,
 			showPrompt;
 
 		// Should this command be run locally (instead of on vagrant)?
@@ -162,7 +186,7 @@ Simon.prototype = {
 			command = this._vagrantCommand(command);
 		}
 
-		util.puts(('\n> Running ' + command).cyan);
+		this._info('Running ' + command.bold);
 
 		// Run the task
 		var task = cp.exec(command, {
@@ -174,9 +198,17 @@ Simon.prototype = {
 		task.stderr.pipe(process.stderr);
 
 		runningTasks.push(task);
-		task.on('exit', function () {
+		task.on('close', function (code) {
+
+			if (code) {
+				simon._warning('Task may not have completed successfully');
+			} else {
+				simon._success('Task completed successfully');
+			}
+
 			// Remove this task from the running tasks upon completion
 			runningTasks.splice(runningTasks.indexOf(task, 1));
+			simon._triggerPrompt(); // if required
 		});
 
 		if (this._hasPrompt) {
@@ -187,48 +219,6 @@ Simon.prototype = {
 			// Execute the showPrompt function every time there's an output
 			task.stdout.on('data', showPrompt);
 			task.stderr.on('data', showPrompt);
-		}
-
-		return task;
-	},
-
-	/**
-		Execute the given file
-		@method	execFile
-		@param	{String} fileName
-		@param	{Array} [args]
-		@return {ChildProcess} task
-	*/
-	execFile: function (fileName, args) {
-
-		var showPrompt;
-
-		if (args && args.length > 0) {
-			args = Array.prototype.slice.call(args);
-		}
-
-		util.puts((
-			'Running ' + path.basename(fileName) + ' ' + args.join(' ')
-		).cyan);
-
-		var task = cp.execFile(fileName, args, {
-			cwd: process.cwd()
-		});
-
-		// Redirect the output from this task to the process's stdout
-		task.stdout.pipe(process.stdout);
-		task.stderr.pipe(process.stderr);
-
-		if (this._hasPrompt) {
-
-			showPrompt = this._generateShowPrompt();
-
-			task.stdout.on('data', function () {
-				showPrompt();
-			});
-			task.stderr.on('data', function () {
-				showPrompt();
-			});
 		}
 
 		return task;
@@ -252,7 +242,7 @@ Simon.prototype = {
 
 			'done' - fired when all the tasks have finished successfully.
 			'error' - fired when a task did not successfully complete
-			'exit' - fired when the tasks are done, with a non-zero code if an error orccured
+			'close' - fired when the tasks are done, with a non-zero code if an error orccured
 
 		Send in an array with the format `[{name: 'taskName', args: [...]}...`
 		The tasks will not run until the previous task has finished successfully
@@ -272,17 +262,17 @@ Simon.prototype = {
 			emitter = new events.EventEmitter();
 
 			// Exit event
-			emitter.addListener('exit', function (code) {
-				util.puts(('Tasks completed ' + (
+			emitter.addListener('close', function (code) {
+				simon._info('Tasks completed ' + (
 					code > 0 ? 'with errors' : 'without errors'
-				)).yellow);
+				));
 				emitter.removeAllListeners();
 			});
 
 			// Done event
 			emitter.addListener('done', function () {
-				util.puts('All tasks completed successfully!'.green);
-				emitter.emit('exit', 0);
+				simon._success('All tasks completed successfully!');
+				emitter.emit('close', 0);
 			});
 
 			// Error event
@@ -297,10 +287,10 @@ Simon.prototype = {
 					util.puts(('' + error).red);
 				}
 
-				util.puts((
-					'The task "' + task + '" was cancelled or encountered an error!'
-				).red);
-				emitter.emit('exit', 1);
+				simon._error(
+					'The task "' + task.bold + '" was cancelled or encountered an error!'
+				);
+				emitter.emit('close', 1);
 			});
 		}
 
@@ -322,7 +312,7 @@ Simon.prototype = {
 
 			// A task was performed, setup the next one
 
-			task.once('exit', function (code) {
+			task.once('close', function (code) {
 
 				if (code) {
 					// Errored out
@@ -364,7 +354,9 @@ Simon.prototype = {
 	*/
 	npm: function () {
 		// NPM is always executed locally
-		return this.exec('npm', arguments, null, true);
+		var args = Array.prototype.slice.apply(arguments);
+		args.push('--color always');
+		return this.exec('npm', args, null, true);
 	},
 
 	/**
@@ -385,7 +377,9 @@ Simon.prototype = {
 		@return	{ChildProcess}
 	*/
 	composer: function () {
-		return this.exec('composer', arguments);
+		var args = Array.prototype.slice.apply(arguments);
+		args.push('--ansi');
+		return this.exec('composer', args);
 	},
 
 	/**
@@ -396,6 +390,7 @@ Simon.prototype = {
 	artisan: function () {
 		var args = ['artisan'];
 		args.push.apply(args, arguments);
+		args.push('--ansi');
 		return this.php.apply(this, args);
 	},
 
@@ -411,6 +406,7 @@ Simon.prototype = {
 			'phpunit'
 		].join(path.sep)];
 		args.push.apply(args, arguments);
+		args.push('--colors');
 		return this.php.apply(this, args);
 	},
 
@@ -587,11 +583,11 @@ Simon.prototype = {
 	*/
 	refresh: function () {
 		var task = this.artisan('migrate:refresh --seed');
-		task.on('exit', function (code) {
+		task.on('close', function (code) {
 			if (code) {
-				util.puts('The database did not refresh successfully'.red);
+				this._error('The database did not refresh successfully');
 			} else {
-				util.puts('Database refreshed and seeded successfully'.cyan);
+				this._success('Database refreshed and seeded successfully');
 			}
 		});
 		return task;
@@ -725,15 +721,13 @@ Simon.prototype = {
 			fs.writeFileSync(locations.hostsFile, hosts);
 
 		} catch (e) {
-			util.puts(e.toString().red);
-			util.puts(('The site "' + url + '" could not be added.').red);
+			this._error(e + '');
+			this._error('The site "' + url + '" could not be added.');
 			return false;
 
 		}
 
-		util.puts((
-			'Added new site at ' + url.bold
-		).green);
+		this._success('Added new site at ' + url.bold);
 
 		return true;
 
@@ -781,17 +775,17 @@ Simon.prototype = {
 					hosts.replace(existingMatch, eol)
 				);
 
-				util.puts(('The site "' + url + '" was removed successfully.').green);
+				this._success('The site "' + url.bold + '" was removed successfully.');
 				return true;
 
 			} catch (e) {
 				// An error occured, probably permissions
-				util.puts(e.toString().red);
-				util.puts(('The site "' + url + '" could not be removed.').red);
+				this._error(e + '');
+				this._error('The site "' + url + '" could not be removed.');
 			}
 		} else {
 			// Doesn't exist
-			util.puts(('The site "' + url + '" does not exist').yellow);
+			this._warning('The site "' + url + '" does not exist');
 			return true;
 		}
 
@@ -815,6 +809,7 @@ Simon.prototype = {
 			function (command) {
 				var args = command.trim().split(/\s+/),
 					hasCommand = false,
+					task,
 					isBlacklisted,
 					isQuit;
 
@@ -837,7 +832,7 @@ Simon.prototype = {
 					!isBlacklisted					// Can't be blacklisted
 				) {
 					hasCommand = true;
-					simon[command].call(simon, args);
+					task = simon[command].call(simon, args);
 				}
 
 				if (isBlacklisted) {
@@ -850,14 +845,20 @@ Simon.prototype = {
 					args = command + ' ' + args;
 
 					// Run the default grunt task
-					simon.grunt.call(simon, args);
+					task = simon.grunt.call(simon, args);
 				}
-
 
 
 				if (isQuit) {
 					process.exit();
+				} else if (task && typeof task.on === 'function') {
+
+					// Prompt again only on task completion
+					simon._hasPrompt = false;
+					task.on('close', simon.prompt.bind(simon));
+
 				} else {
+					// Prompt immediately
 					simon.prompt();
 				}
 			}
