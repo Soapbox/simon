@@ -1,10 +1,25 @@
 {
 	"hhvm": false,
 	"local": false,
-	"prompt": "Simon says (enter a command): ",
 	"banner": "SoapBox Simon",
 	"ip": "127.0.0.1",
 	"domain": "localhost",
+	"prompt": {
+		"text": "Simon says (enter a command): ",
+		"commands": [
+			"help",
+			"install",
+			"update",
+			"npm",
+			"composer",
+			"artisan",
+			"phpunit",
+			"refresh",
+			"permissions",
+			"bower",
+			"grunt"
+		]
+	},
 	"vagrant": {
 		"dir": "/vagrant",
 		"box": {

@@ -1,8 +1,10 @@
-// Command-line interface
+/**
+	SoapBox Simon CLI implementation
+*/
 
 var fs = require('fs'),
 	path = require('path'),	// Path. http://nodejs.org/api/path.html
-	configFileName = path.join(process.cwd(), 'simon.json'),
+	configFileName = path.join(process.cwd(), 'simon.json'), // Current project simon.json
 	program,	// Commander. Command-line interface provider. https://github.com/visionmedia/commander.js
 	Command,	// Constructor class for Commander
 	pkg, config, simon;
@@ -11,10 +13,10 @@ require('colors');
 
 program = require('commander');
 Command = program.Command;
-pkg = require(path.join(__dirname, 'package.json')); // package.json info
+pkg = require('./package.json'); // package.json info
 
 // Instantiate Simon!
-simon = require(path.join(__dirname, 'simon'))();
+simon = require('./lib/simon');
 
 // Don't exist when there's an unknown options (could belong to the proxy)
 Command.prototype.unknownOption = function (flag) {
@@ -25,6 +27,7 @@ Command.prototype.unknownOption = function (flag) {
 };
 
 // Parse given commandline arguments
+// Makes sure that the executed commands get the right args
 function parseArgs(command) {
 	var args = process.argv,
 		commandIndex = command ? args.indexOf(command) : -1;
@@ -50,27 +53,30 @@ function configureSimon(simon, config, program, skipSimonJsonCheck) {
 	config = config || require(configFileName);
 
 	// Perform configuration
-	config.local = !!program.local;
-	config.hhvm = !!program.super;
-	config.help = program.outputHelp.bind(program);
-	config.banner = fs.readFileSync(path.join(__dirname, 'lib', 'banner.txt'), {
-		encoding: 'utf8'
-	});
+	if (program.local) {
+		config.local = true;
+	}
+	if (program.super) {
+		config.hhvm = true;
+	}
 
+	// Simon's help method will be the commander's help
+	config.help = program.outputHelp.bind(program);
+
+	// Get the banner
+	config.banner = fs.readFileSync(
+		path.join(
+			__dirname, 'lib', 'options', 'banner.txt'), {
+			encoding: 'utf8'
+		}
+	);
+
+	// Perform configuation
 	simon.configure(config);
 
 	return simon;
 }
 
-// Find locations of all the files
-/*if (!fs.existsSync(locations.hostsFile)) {
-	util.error('Warning'.bold.yellow + ': Could not read the hosts file.'.yellow);
-	util.error((
-		'Please make sure "' + locations.hostsFile + '" exists on your system, ' +
-		'or make sure that your system is supported'
-	));
-}
-*/
 
 // Setup for program commands
 
@@ -119,6 +125,15 @@ program.command('npm *')
 		configureSimon(simon, config, program);
 		args = parseArgs('npm');
 		simon.npm.apply(simon, args);
+	});
+
+// Run composer
+program.command('php *')
+	.description('Proxies the global php command')
+	.action(function (args) {
+		configureSimon(simon, config, program);
+		args = parseArgs('php');
+		simon.php.apply(simon, args);
 	});
 
 // Run composer

@@ -1,0 +1,11 @@
+{
+	"text": "Enter text:",
+	"commands": [],
+	"quit": [
+		"quit",
+		"stop",
+		"close",
+		"exit",
+		"cancel"
+	]
+}
