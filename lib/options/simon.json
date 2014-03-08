@@ -5,7 +5,7 @@
 	"ip": "127.0.0.1",
 	"domain": "localhost",
 	"prompt": {
-		"text": "Simon says (enter a command): ",
+		"text": "Simon says > ",
 		"commands": [
 			"help",
 			"install",

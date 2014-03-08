@@ -24,6 +24,14 @@ var cli = require('../index.js');
 
 if (cli.program.args.length === 0) {
 
+	cli.simon.prompt();
+
+	if (cli.program.interactive) {
+
+		// Jump right into interactive mode
+		return;
+	}
+
 	// Add additional configuration options
 	cli.configure(
 		cli.simon,
@@ -33,10 +41,5 @@ if (cli.program.args.length === 0) {
 
 	// No args found, run the watch task with interactive mode
 	cli.simon.watch();
-	cli.simon.prompt();
 
-} else {
-
-	// Simon will not be running interactive mode, close the prompt
-	cli.simon.closeRl();
 }

@@ -83,6 +83,7 @@ function configureSimon(simon, config, program, skipSimonJsonCheck) {
 program.version(pkg.version)
 	.option('-s, --super', 'Run PHP commands such as PHPUnit and Artisan with HHVM.')
 	.option('-l, --local', 'Run all commands locally instead of on the Vagrant VM.')
+	.option('-i, --interactive', 'Jump right into interactive mode.')
 	.option('--subdomain [slug]', 'Specify a subdomain for the "add" and "remove" commands');
 
 // Run the default task
@@ -232,6 +233,7 @@ program.command('*')
 		args.unshift(task);
 		simon.grunt.apply(simon, args);
 	});
+
 
 program.on('help', function () {
 	console.log('  Run simon without arguments to enter ' + 'interactive mode\n'.bold);
