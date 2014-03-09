@@ -1,6 +1,6 @@
 {
   "name": "soapbox-simon",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "The development interface for SoapBox (http://soapboxhq.com/)",
   "main": "index.js",
   "scripts": {

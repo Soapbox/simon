@@ -21,7 +21,7 @@ The development interface for SoapBox. Can be used specifically for any project 
 First download the [latest tarball](https://github.com/nfrasser/simon/releases/latest), then install globally with NPM
 
 ```
-npm install -g ~/Downloads/simon-0.0.x.tar.gz
+npm install -g ~/Downloads/simon-latest.tar.gz
 ```
 
 You now have access to the `simon` command across your system.
@@ -29,6 +29,7 @@ You now have access to the `simon` command across your system.
 ### Updating Simon
 
 To update Simon you'll have to remove the currently installed package
+
 ```
 npm uninstall -g soapbox-simon
 ```
@@ -42,35 +43,42 @@ You need to have a `simon.json` file in your project's root directory before usi
 
 ```json
 {
-	"hhvm": false,
-	"local": false,
-	"prompt": "Simon says (enter a command): ",
-	"ip": "127.0.0.1",
-	"domain": "localhost",
-	"vagrant": {
-		"dir": "/vagrant",
-		"box": {
-			"name": "precise64",
-			"provider": "virtualbox",
-			"url": "http://files.vagrantup.com/precise64.box"
-		}
-	}
+    "hhvm": false,
+    "local": false,
+    "banner": "SoapBox Simon",
+    "ip": "127.0.0.1",
+    "domain": "localhost",
+    "prompt": {
+        "text": "Simon says > ",
+        "commands": [
+            "..."
+        ]
+    },
+    "vagrant": {
+        "dir": "/vagrant",
+        "box": {
+            "name": "precise64",
+            "provider": "virtualbox",
+            "url": "http://files.vagrantup.com/precise64.box"
+        }
+    }
 }
+
 ```
 
 Here's what each of these do
 
-**`hhvm`** If true, will run all PHP commands (including PHPUnit and Composer) with the [HipHop Virtual Machine](http://www.hhvm.com/). Same as using the `--super` option.
+* **`hhvm`**: If true, will run all PHP commands (including PHPUnit and Composer) with the [HipHop Virtual Machine](http://www.hhvm.com/). Same as using the `--super` option.
 
-**`local`** If true, will not ssh into the Vagrant VM before running a command. Note that all Node commands (including NPM, Grunt, and Bower) _always_ run locally.
+* **`local`**: If true, will not ssh into the Vagrant VM before running a command. Note that all Node commands (including NPM, Grunt, and Bower) _always_ run locally.
 
-**`prompt`** The question Simon asks you during interactive mode.
+* **`prompt`**: Options for the [Prompt](https://github.com/nfrasser/simon/blob/master/lib/prompt.js) class, which powers interactive mode.
 
-**`ip`** IP address of the Vagrant machine. Should be the same as the IP on `config.vm.network` in the Vagrantfile.
+* **`ip`**: IP address of the Vagrant machine. Should be the same as the IP on `config.vm.network` in the Vagrantfile.
 
-**`domain`** Domain name that resolves to the `ip`.
+* **`domain`**: Domain name that resolves to the `ip`.
 
-**`vagrant`** Configuration hash for Vagrant. If set to `false`, Simon will not attempt to install a Vagrant VM and will attempt to run all commands locally.
+* **`vagrant`**: Configuration hash for Vagrant. If set to `false`, Simon will not attempt to install a Vagrant VM and will attempt to run all commands locally.
 
 
 ### Commands and Options
@@ -85,18 +93,20 @@ $ simon help
   Commands:
 
     help                   Show this help block
-    install                Installs all vendor dependencies from NPM, Composer, and Bower
-    update                 Updates all vendor dependencies from NPM, Composer, and Bower
-    vagrant                Proxies the global vagrant command
-    npm                    Proxies the global npm command
-    composer               Proxies the global composer command
-    artisan                Proxies the local php artisan command
-    phpunit                Proxies the local phpunit command
-    refresh                Reexecutes migrations and seeds the database
-    add                    Adds a new website for the current project
-    remove                 Removes the website for the current project
-    bower                  Proxies the local bower command
-    grunt                  Proxies the local grunt command
+    install                Install all vendor dependencies from NPM, Composer, and Bower
+    update                 Update all vendor dependencies from NPM, Composer, and Bower
+    vagrant                Run the vagrant command
+    ssh <cmd>              Run the given command on the Vagrant VM
+    npm                    Run the npm command
+    php                    Run the php command
+    composer               Run the composer command
+    artisan                Run the local php artisan command
+    phpunit                Run the local phpunit command
+    refresh                Rollback and reapply migrations, seed the database
+    add                    Add a new website for the current project
+    remove                 Remove the website for the current project
+    bower                  Run the bower command
+    grunt                  Run grunt command
     permissions            Fix permissions on the app/storage folder (UNIX only)
     start                  Initialize the development environment
     *                      Run a given Grunt task
@@ -107,6 +117,7 @@ $ simon help
     -V, --version       output the version number
     -s, --super         Run PHP commands such as PHPUnit and Artisan with HHVM.
     -l, --local         Run all commands locally instead of on the Vagrant VM.
+    -i, --interactive   Jump right into interactive mode.
     --subdomain [slug]  Specify a subdomain for the "add" and "remove" commands
 
 ```
@@ -160,17 +171,13 @@ From interactive mode you can run most of the commands available from `simon hel
 
 ```
 $ simon
-Simon says (enter a command):
-refresh
-
+Simon says > refresh
 > Running php artisan migrate:refresh --seed
 
 ...
 
-Database refreshed and seeded successfully
-
-Simon says (enter a command):
-
+> Database refreshed and seeded successfully
+Simon says >
 ```
 
 You can also run interactive mode with the command-line options. For example, running `simon -l` will ensure that the `artisan` interactive command always calls `php artisan` on the host machine.
