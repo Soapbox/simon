@@ -122,7 +122,7 @@ program.command('vagrant *')
 // Run a command on the Vagrant VM
 program.command('ssh <cmd>')
 	.description('Run the given command on the Vagrant VM')
-	.action(function (cmd) {
+	.action(function (/*cmd*/) {
 		configureSimon(simon, config, program);
 		var args = parseArgs('ssh');
 		simon.ssh.call(simon, args.join(' '));
