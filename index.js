@@ -37,7 +37,9 @@ function parseArgs(command) {
 // Perform configuration based on simon.json
 function configureSimon(simon, config, program, skipSimonJsonCheck) {
 
-	if (!skipSimonJsonCheck && !fs.existsSync(configFileName)) {
+	var configExists = fs.existsSync(configFileName);
+
+	if (!skipSimonJsonCheck && !configExists) {
 
 		// Make sure simon.json is defined
 		console.error([
@@ -50,7 +52,7 @@ function configureSimon(simon, config, program, skipSimonJsonCheck) {
 		process.exit();
 	}
 
-	config = config || require(configFileName);
+	config = config || configExists ? require(configFileName) : {};
 
 	// Perform configuration
 	if (program.local) {
@@ -81,12 +83,57 @@ function configureSimon(simon, config, program, skipSimonJsonCheck) {
 // Setup for program commands
 
 program.version(pkg.version)
-	.option('-s, --super', 'Run PHP commands such as PHPUnit and Artisan with HHVM.')
-	.option('-l, --local', 'Run all commands locally instead of on the Vagrant VM.')
 	.option('-i, --interactive', 'Jump right into interactive mode.')
+	.option('-l, --local', 'Run all commands locally instead of on the Vagrant VM.')
+	.option('-s, --super', 'Run PHP commands such as PHPUnit and Artisan with HHVM.')
 	.option('--subdomain [slug]', 'Specify a subdomain for the "add" and "remove" commands');
 
-// Run the default task
+
+// Add the currently configured domain to the hosts file
+program.command('add')
+	.description('Add a new website for the current project')
+	.action(function () {
+		configureSimon(simon, config, program);
+		simon.add(program.subdomain);
+	});
+
+// Run artisan
+program.command('artisan *')
+	.description('Run the local php artisan command')
+	.action(function (args) {
+		configureSimon(simon, config, program);
+		args = parseArgs('artisan');
+		simon.artisan.apply(simon, args);
+	});
+
+// Run bower
+program.command('bower *')
+	.description('Run the bower command')
+	.action(function (args) {
+		configureSimon(simon, config, program);
+		args = parseArgs('bower');
+		simon.bower.apply(simon, args);
+	});
+
+// Run composer
+program.command('composer *')
+	.description('Run the composer command')
+	.action(function (args) {
+		configureSimon(simon, config, program);
+		args = parseArgs('composer');
+		simon.composer.apply(simon, args);
+	});
+
+// Run grunt
+program.command('grunt *')
+	.description('Run grunt command')
+	.action(function (args) {
+		configureSimon(simon, config, program);
+		args = parseArgs('grunt');
+		simon.grunt.apply(simon, args);
+	});
+
+
 program.command('help')
 	.description('Show this help block')
 	.action(function () {
@@ -102,32 +149,6 @@ program.command('install')
 		simon.install();
 	});
 
-// Run update for all package managers
-program.command('update')
-	.description('Update all vendor dependencies from NPM, Composer, and Bower')
-	.action(function () {
-		configureSimon(simon, config, program);
-		simon.update();
-	});
-
-// Run Vagrant
-program.command('vagrant *')
-	.description('Run the vagrant command')
-	.action(function (args) {
-		configureSimon(simon, config, program);
-		args = parseArgs('vagrant');
-		simon.vagrant.apply(simon, args);
-	});
-
-// Run a command on the Vagrant VM
-program.command('ssh <cmd>')
-	.description('Run the given command on the Vagrant VM')
-	.action(function (/*cmd*/) {
-		configureSimon(simon, config, program);
-		var args = parseArgs('ssh');
-		simon.ssh.call(simon, args.join(' '));
-	});
-
 // Run NPM
 program.command('npm *')
 	.description('Run the npm command')
@@ -137,31 +158,21 @@ program.command('npm *')
 		simon.npm.apply(simon, args);
 	});
 
-// Run composer
+// Fix permissions on the app/storage folder
+program.command('permissions')
+	.description('Fix permissions on the app/storage folder (UNIX only)')
+	.action(function () {
+		configureSimon(simon, config, program);
+		simon.permissions();
+	});
+
+// Run php
 program.command('php *')
 	.description('Run the php command')
 	.action(function (args) {
 		configureSimon(simon, config, program);
 		args = parseArgs('php');
 		simon.php.apply(simon, args);
-	});
-
-// Run composer
-program.command('composer *')
-	.description('Run the composer command')
-	.action(function (args) {
-		configureSimon(simon, config, program);
-		args = parseArgs('composer');
-		simon.composer.apply(simon, args);
-	});
-
-// Run artisan
-program.command('artisan *')
-	.description('Run the local php artisan command')
-	.action(function (args) {
-		configureSimon(simon, config, program);
-		args = parseArgs('artisan');
-		simon.artisan.apply(simon, args);
 	});
 
 // Run PHPUnit
@@ -182,14 +193,6 @@ program.command('refresh')
 		simon.refresh();
 	});
 
-// Add the currently configured domain to the hosts file
-program.command('add')
-	.description('Add a new website for the current project')
-	.action(function () {
-		configureSimon(simon, config, program);
-		simon.add(program.subdomain);
-	});
-
 // Remove the currently configured domain from the hosts file
 program.command('remove')
 	.description('Remove the website for the current project')
@@ -199,30 +202,13 @@ program.command('remove')
 	});
 
 
-// Run bower
-program.command('bower *')
-	.description('Run the bower command')
-	.action(function (args) {
+// Run a command on the Vagrant VM
+program.command('ssh <cmd>')
+	.description('Run the given command on the Vagrant VM')
+	.action(function (/*cmd*/) {
 		configureSimon(simon, config, program);
-		args = parseArgs('bower');
-		simon.bower.apply(simon, args);
-	});
-
-// Run grunt
-program.command('grunt *')
-	.description('Run grunt command')
-	.action(function (args) {
-		configureSimon(simon, config, program);
-		args = parseArgs('grunt');
-		simon.grunt.apply(simon, args);
-	});
-
-// Fix permissions on the app/storage folder
-program.command('permissions')
-	.description('Fix permissions on the app/storage folder (UNIX only)')
-	.action(function () {
-		configureSimon(simon, config, program);
-		simon.permissions();
+		var args = parseArgs('ssh');
+		simon.ssh.call(simon, args.join(' '));
 	});
 
 // Initialize the app
@@ -232,6 +218,24 @@ program.command('start')
 		configureSimon(simon, config, program);
 		simon.start();
 	});
+
+// Run update for all package managers
+program.command('update')
+	.description('Update all vendor dependencies from NPM, Composer, and Bower')
+	.action(function () {
+		configureSimon(simon, config, program);
+		simon.update();
+	});
+
+// Run Vagrant
+program.command('vagrant *')
+	.description('Run the vagrant command')
+	.action(function (args) {
+		configureSimon(simon, config, program);
+		args = parseArgs('vagrant');
+		simon.vagrant.apply(simon, args);
+	});
+
 
 // Run a grunt command
 program.command('*')

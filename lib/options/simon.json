@@ -7,19 +7,19 @@
 	"prompt": {
 		"text": "Simon says > ",
 		"commands": [
-			"help",
-			"list",
-			"install",
-			"update",
-			"npm",
-			"composer",
 			"artisan",
+			"bower",
+			"composer",
+			"grunt",
+			"help",
+			"install",
+			"npm",
+			"permissions",
+			"php",
 			"phpunit",
 			"refresh",
-			"permissions",
 			"ssh",
-			"bower",
-			"grunt"
+			"update"
 		]
 	},
 	"vagrant": {
