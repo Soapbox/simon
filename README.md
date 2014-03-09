@@ -21,7 +21,7 @@ The development interface for SoapBox. Can be used specifically for any project 
 First download the [latest tarball](https://github.com/nfrasser/simon/releases/latest), then install globally with NPM
 
 ```
-npm install -g ~/Downloads/simon-0.0.x.tar.gz
+npm install -g ~/Downloads/simon-latest.tar.gz
 ```
 
 You now have access to the `simon` command across your system.
@@ -29,6 +29,7 @@ You now have access to the `simon` command across your system.
 ### Updating Simon
 
 To update Simon you'll have to remove the currently installed package
+
 ```
 npm uninstall -g soapbox-simon
 ```
