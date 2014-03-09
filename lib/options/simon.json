@@ -8,6 +8,7 @@
 		"text": "Simon says > ",
 		"commands": [
 			"help",
+			"list",
 			"install",
 			"update",
 			"npm",
@@ -16,6 +17,7 @@
 			"phpunit",
 			"refresh",
 			"permissions",
+			"ssh",
 			"bower",
 			"grunt"
 		]
