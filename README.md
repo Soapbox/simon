@@ -42,20 +42,27 @@ You need to have a `simon.json` file in your project's root directory before usi
 
 ```json
 {
-	"hhvm": false,
-	"local": false,
-	"prompt": "Simon says (enter a command): ",
-	"ip": "127.0.0.1",
-	"domain": "localhost",
-	"vagrant": {
-		"dir": "/vagrant",
-		"box": {
-			"name": "precise64",
-			"provider": "virtualbox",
-			"url": "http://files.vagrantup.com/precise64.box"
-		}
-	}
+    "hhvm": false,
+    "local": false,
+    "banner": "SoapBox Simon",
+    "ip": "127.0.0.1",
+    "domain": "localhost",
+    "prompt": {
+        "text": "Simon says > ",
+        "commands": [
+            "..."
+        ]
+    },
+    "vagrant": {
+        "dir": "/vagrant",
+        "box": {
+            "name": "precise64",
+            "provider": "virtualbox",
+            "url": "http://files.vagrantup.com/precise64.box"
+        }
+    }
 }
+
 ```
 
 Here's what each of these do
@@ -160,8 +167,7 @@ From interactive mode you can run most of the commands available from `simon hel
 
 ```
 $ simon
-Simon says (enter a command):
-refresh
+Simon says > refresh
 
 > Running php artisan migrate:refresh --seed
 
@@ -169,8 +175,7 @@ refresh
 
 Database refreshed and seeded successfully
 
-Simon says (enter a command):
-
+Simon says >
 ```
 
 You can also run interactive mode with the command-line options. For example, running `simon -l` will ensure that the `artisan` interactive command always calls `php artisan` on the host machine.
