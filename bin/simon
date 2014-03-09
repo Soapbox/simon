@@ -32,17 +32,15 @@ if (cli.program.args.length === 0) {
 		cli.program
 	);
 
-	if (cli.program.interactive) {
-
-		// Jump right into interactive mode
-		cli.simon.prompt();
-
-	} else {
-
-		cli.simon.prompt();
-		cli.simon.watch();
-
+	if (!cli.program.interactive) {
+		setImmediate(cli.simon.watch.bind(cli.simon));
 	}
 
+	cli.program.interactive = true;
 
 }
+
+if (cli.program.interactive) {
+	cli.simon.prompt();
+}
+
