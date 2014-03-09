@@ -96,7 +96,7 @@ program.command('help')
 
 // Run the install
 program.command('install')
-	.description('Installs all vendor dependencies from NPM, Composer, and Bower')
+	.description('Install all vendor dependencies from NPM, Composer, and Bower')
 	.action(function () {
 		configureSimon(simon, config, program);
 		simon.install();
@@ -104,7 +104,7 @@ program.command('install')
 
 // Run update for all package managers
 program.command('update')
-	.description('Updates all vendor dependencies from NPM, Composer, and Bower')
+	.description('Update all vendor dependencies from NPM, Composer, and Bower')
 	.action(function () {
 		configureSimon(simon, config, program);
 		simon.update();
@@ -112,7 +112,7 @@ program.command('update')
 
 // Run Vagrant
 program.command('vagrant *')
-	.description('Proxies the global vagrant command')
+	.description('Run the vagrant command')
 	.action(function (args) {
 		configureSimon(simon, config, program);
 		args = parseArgs('vagrant');
@@ -130,7 +130,7 @@ program.command('ssh <cmd>')
 
 // Run NPM
 program.command('npm *')
-	.description('Proxies the global npm command')
+	.description('Run the npm command')
 	.action(function (args) {
 		configureSimon(simon, config, program);
 		args = parseArgs('npm');
@@ -139,7 +139,7 @@ program.command('npm *')
 
 // Run composer
 program.command('php *')
-	.description('Proxies the global php command')
+	.description('Run the php command')
 	.action(function (args) {
 		configureSimon(simon, config, program);
 		args = parseArgs('php');
@@ -148,7 +148,7 @@ program.command('php *')
 
 // Run composer
 program.command('composer *')
-	.description('Proxies the global composer command')
+	.description('Run the composer command')
 	.action(function (args) {
 		configureSimon(simon, config, program);
 		args = parseArgs('composer');
@@ -157,7 +157,7 @@ program.command('composer *')
 
 // Run artisan
 program.command('artisan *')
-	.description('Proxies the local php artisan command')
+	.description('Run the local php artisan command')
 	.action(function (args) {
 		configureSimon(simon, config, program);
 		args = parseArgs('artisan');
@@ -166,7 +166,7 @@ program.command('artisan *')
 
 // Run PHPUnit
 program.command('phpunit *')
-	.description('Proxies the local phpunit command')
+	.description('Run the local phpunit command')
 	.action(function (args) {
 		//args = arguments.length > 1 ? Array.prototype.slice.call(arguments, 0, -1) : [];
 		configureSimon(simon, config, program);
@@ -176,7 +176,7 @@ program.command('phpunit *')
 
 // Run refresh
 program.command('refresh')
-	.description('Reexecutes migrations and seeds the database')
+	.description('Rollback and reapply migrations, seed the database')
 	.action(function () {
 		configureSimon(simon, config, program);
 		simon.refresh();
@@ -184,7 +184,7 @@ program.command('refresh')
 
 // Add the currently configured domain to the hosts file
 program.command('add')
-	.description('Adds a new website for the current project')
+	.description('Add a new website for the current project')
 	.action(function () {
 		configureSimon(simon, config, program);
 		simon.add(program.subdomain);
@@ -192,7 +192,7 @@ program.command('add')
 
 // Remove the currently configured domain from the hosts file
 program.command('remove')
-	.description('Removes the website for the current project')
+	.description('Remove the website for the current project')
 	.action(function () {
 		configureSimon(simon, config, program);
 		simon.remove(program.subdomain);
@@ -201,7 +201,7 @@ program.command('remove')
 
 // Run bower
 program.command('bower *')
-	.description('Proxies the local bower command')
+	.description('Run the bower command')
 	.action(function (args) {
 		configureSimon(simon, config, program);
 		args = parseArgs('bower');
@@ -210,7 +210,7 @@ program.command('bower *')
 
 // Run grunt
 program.command('grunt *')
-	.description('Proxies the local grunt command')
+	.description('Run grunt command')
 	.action(function (args) {
 		configureSimon(simon, config, program);
 		args = parseArgs('grunt');
