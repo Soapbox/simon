@@ -92,32 +92,32 @@ $ simon help
 
   Commands:
 
+    add                    Add a new website for the current project
+    artisan                Run the local php artisan command
+    bower                  Run the bower command
+    composer               Run the composer command
+    grunt                  Run grunt command
     help                   Show this help block
     install                Install all vendor dependencies from NPM, Composer, and Bower
-    update                 Update all vendor dependencies from NPM, Composer, and Bower
-    vagrant                Run the vagrant command
-    ssh <cmd>              Run the given command on the Vagrant VM
     npm                    Run the npm command
+    permissions            Fix permissions on the app/storage folder (UNIX only)
     php                    Run the php command
-    composer               Run the composer command
-    artisan                Run the local php artisan command
     phpunit                Run the local phpunit command
     refresh                Rollback and reapply migrations, seed the database
-    add                    Add a new website for the current project
     remove                 Remove the website for the current project
-    bower                  Run the bower command
-    grunt                  Run grunt command
-    permissions            Fix permissions on the app/storage folder (UNIX only)
+    ssh <cmd>              Run the given command on the Vagrant VM
     start                  Initialize the development environment
+    update                 Update all vendor dependencies from NPM, Composer, and Bower
+    vagrant                Run the vagrant command
     *                      Run a given Grunt task
 
   Options:
 
     -h, --help          output usage information
     -V, --version       output the version number
-    -s, --super         Run PHP commands such as PHPUnit and Artisan with HHVM.
-    -l, --local         Run all commands locally instead of on the Vagrant VM.
     -i, --interactive   Jump right into interactive mode.
+    -l, --local         Run all commands locally instead of on the Vagrant VM.
+    -s, --super         Run PHP commands such as PHPUnit and Artisan with HHVM.
     --subdomain [slug]  Specify a subdomain for the "add" and "remove" commands
 
 ```
