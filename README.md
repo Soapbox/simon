@@ -157,6 +157,14 @@ This does a few things
 
 And that's all you should need until the current branch changes!
 
+If you're getting permission errors or white screens, running this might fix it.
+
+```
+simon permissions
+simon -l permissions
+```
+
+
 ### Interactive mode
 
 After running `simon start`, run `simon` without any arguments to enter _interactive mode_. Here you'll be able run some useful SoapBox-related commands in the mini "Simon says" shell.
