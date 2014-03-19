@@ -23,11 +23,6 @@
 		]
 	},
 	"vagrant": {
-		"dir": "/vagrant",
-		"box": {
-			"name": "precise64",
-			"provider": "virtualbox",
-			"url": "http://files.vagrantup.com/precise64.box"
-		}
+		"dir": "/vagrant"
 	}
 }
