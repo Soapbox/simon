@@ -51,12 +51,7 @@ You need to have a `simon.json` file in your project's root directory before usi
         ]
     },
     "vagrant": {
-        "dir": "/vagrant",
-        "box": {
-            "name": "precise64",
-            "provider": "virtualbox",
-            "url": "http://files.vagrantup.com/precise64.box"
-        }
+        "dir": "/vagrant"
     }
 }
 
