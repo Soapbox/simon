@@ -239,12 +239,12 @@ program.command('vagrant *')
 
 // Run a grunt command
 program.command('*')
-	.description('Run a given Grunt task')
+	.description('Run a task defined in simon.json')
 	.action(function (task) {
 		var args = parseArgs(task);
 		configureSimon(simon, config, program);
 		args.unshift(task);
-		simon.grunt.apply(simon, args);
+		simon.task.apply(simon, args);
 	});
 
 
