@@ -196,5 +196,10 @@ simon -l start
 will perform the startup process above, except  `composer` and `artisan` will run locally rather than on the VM.
 
 
+
+## Troubleshooting
+
+Check out [TROUBLESHOOTING.md](https://github.com/SoapBox/simon/blob/master/TROUBLESHOOTING.md)
+
 ***
 Copyright © 2014 SoapBox Innovations Inc.
