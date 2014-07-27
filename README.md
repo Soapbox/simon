@@ -21,7 +21,7 @@ The development interface for SoapBox. Can be used specifically for any project 
 Install simon globally with NPM
 
 ```
-sudo npm install -g soapbox-simon
+npm install -g soapbox-simon
 ```
 
 You now have access to the `simon` command across your system.
@@ -29,7 +29,7 @@ You now have access to the `simon` command across your system.
 ### Updating Simon
 
 ```
-sudo npm update -g soapbox-simon
+npm update -g soapbox-simon
 ```
 
 
@@ -198,4 +198,3 @@ will perform the startup process above, except  `composer` and `artisan` will ru
 
 ***
 Copyright © 2014 SoapBox Innovations Inc.
-
