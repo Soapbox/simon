@@ -3,13 +3,13 @@
 This guide will walk you through some common problems you'll run into while
 using Simon, and provide possible fixes.
 
-* [General advice](#General-advice)
-* [Vagrant fails to boot after creating a new VM](#Vagrant-fails-to-boot-after-creating-a-new-VM)
-* [Composer asks to update itself](#Composer-asks-to-update-itself)
-* [Composer asks for GitHub credentials](#Composer-asks-for-GitHub credentials)
+* [General advice](#general-advice)
+* [Vagrant fails to boot after creating a new VM](#vagrant-fails-to-boot-after-creating-a-new-vm)
+* [Composer asks to update itself](#composer-asks-to-update-itself)
+* [Composer asks for GitHub credentials](#composer-asks-for-github credentials)
 * [`composer install` cannot find a vendor package](#composer-install-cannot-find-a-vendor-package)
-* [Conflicts with `.min` files](#Conflicts-with-.min-files)
-* [(Safely) Nuke everything and start fresh](#Safely-Nuke-everything-and-start-fresh)
+* [Conflicts with `.min` files](#conflicts-with-min-files)
+* [(Safely) Nuke everything and start fresh](#safely-nuke-everything-and-start-fresh)
 
 ***
 
