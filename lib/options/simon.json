@@ -23,6 +23,8 @@
 		]
 	},
 	"vagrant": {
-		"dir": "/vagrant"
+		"alias": "vagrant",
+		"dir": "/vagrant",
+		"run": "ssh -c"
 	}
 }
