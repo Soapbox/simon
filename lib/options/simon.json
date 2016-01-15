@@ -9,6 +9,7 @@
 		"commands": [
 			"artisan",
 			"bower",
+			"clear-cache",
 			"composer",
 			"git",
 			"grunt",

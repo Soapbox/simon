@@ -115,6 +115,15 @@ program.command('bower *')
 		simon.bower.apply(simon, args);
 	});
 
+// Clear app cache
+program.command('clear-cache *')
+	.description('Remove all cache from the app/storage folder')
+	.action(function (args) {
+		configureSimon(simon, config, program);
+		args = parseArgs('clear-cache');
+		simon.clearCache.apply(simon, args);
+	});
+
 // Run composer
 program.command('composer *')
 	.description('Run the composer command')
