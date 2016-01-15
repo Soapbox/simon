@@ -21,11 +21,13 @@
   },
   "homepage": "https://github.com/nfrasser/simon",
   "dependencies": {
-    "commander": "2.2.x",
-    "underscore": "1.6.x",
-    "bower": "1.3.x",
+    "bower": "^1.7.2",
+    "colors": "^1.1.2",
+    "commander": "^2.9.0",
+    "glob": "^6.0.4",
     "grunt-cli": "0.1.x",
-    "colors": "0.6.x"
+    "lodash": "^4.0.0",
+    "rsvp": "^3.1.0"
   },
   "bin": {
     "simon": "bin/simon"
