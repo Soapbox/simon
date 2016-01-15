@@ -124,6 +124,15 @@ program.command('composer *')
 		simon.composer.apply(simon, args);
 	});
 
+// Run git
+program.command('git *')
+	.description('Run git')
+	.action(function (args) {
+		configureSimon(simon, config, program);
+		args = parseArgs('git');
+		simon.git.apply(simon, args);
+	});
+
 // Run grunt
 program.command('grunt *')
 	.description('Run grunt command')
