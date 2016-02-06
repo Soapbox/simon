@@ -13,15 +13,18 @@
 			"git",
 			"grunt",
 			"help",
-			"install",
 			"npm",
 			"permissions",
 			"php",
 			"phpunit",
-			"refresh",
-			"ssh",
-			"update"
-		]
+			"ssh"
+		],
+	},
+	"tasks": {
+		"start": [],
+		"install": [],
+		"refresh": [],
+		"update": []
 	},
 	"vagrant": {
 		"alias": "vagrant",
